@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
+    <script src="d:\PROGRAM\js·html\je.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔽夏转调器！</title>
+</head>
+
+<body>
+    <div>
+    <textarea onchange='printExtreme();' id="before" placeholder="这里输入je谱ˋ( ° ▽、° ) "
+    class="FormControl" style="width: 90%;height: 300px;margin: 10px auto 20px auto;"></textarea>
+    <p id="situation" style="text-align: center;">最高音：? 最低音：？</p>
+    </div>
+    <!-- 升降多少 -->
+    <div style="display: flex;margin: 2em auto;width: 50%;">
+        <select id="updown" class="Select-input FormControl" style="margin: 5px;">
+            <option value="1" selected="selected">升</option>
+            <option value="-1">降</option>
+        </select>
+        <input id="howmany" placeholder="这里输入升/降多少半音" class="FormControl" style="margin: 5px;"
+            onkeyup="this.value=this.value.replace(/[^0-9]/g,'');"></input>
+        <button onclick="byNum();printExtreme();" class="Button Button--primary">转换！</button>
+    </div>
+    <!-- 按调性转 -->
+    <div style="display: flex;margin: 2em auto;width: 50%;">
+        <div style="margin-right: 1em;width: 100%;">
+            <span class="intro">转换前的调</span>
+            <select id="beforemode" class="Select-input FormControl">
+                <option value="0" selected="selected">1 = C</option>
+                <option value="1">1 = #C</option>
+                <option value="2">1 = D</option>
+                <option value="3">1 = #D</option>
+                <option value="4">1 = E</option>
+                <option value="5">1 = F</option>
+                <option value="6">1 = #F</option>
+                <option value="7">1 = G</option>
+                <option value="8">1 = #G</option>
+                <option value="9">1 = A</option>
+                <option value="10">1 = #A</option>
+                <option value="11">1 = B</option>
+            </select>
+        </div>
+        <div style="margin-right: 1em;width: 100%;">
+            <span class="intro">转换后的调</span>
+            <select id="aftermode" class="Select-input FormControl">
+                <option value="0" selected="selected">1 = C</option>
+                <option value="1">1 = #C</option>
+                <option value="2">1 = D</option>
+                <option value="3">1 = #D</option>
+                <option value="4">1 = E</option>
+                <option value="5">1 = F</option>
+                <option value="6">1 = #F</option>
+                <option value="7">1 = G</option>
+                <option value="8">1 = #G</option>
+                <option value="9">1 = A</option>
+                <option value="10">1 = #A</option>
+                <option value="11">1 = B</option>
+            </select>
+        </div>
+        <button onclick="byTon();printExtreme();" class="Button Button--primary">转换！</button>
+    </div>
+    <!-- 最音转换 -->
+    <div style="display: flex;margin: 2em auto;width: 50%;">
+        <select id='extremeMode' class="Select-input FormControl">
+            <option value="0">最低音</option>
+            <option value="1">最高音</option>
+        </select>
+        <span style="font-size: 1.6em;">为</span>
+        <input id="target" placeholder="请按je谱格式输入目标音" class="FormControl"></input>
+        <button onclick='toExtreme();printExtreme();' class="Button Button--primary">转换！</button>
+    </div>
+    <div style="margin: 1em auto;width: 200px;">
+    <button onclick="bShow();printExtreme();" class="Button Button--primary">1=#C记谱</button>
+    <button onclick="toMin();printExtreme();" class="Button Button--primary">一键最简</button>
+    </div>
+
+    <script>
+        function byNum() {
+            let x = document.getElementById("howmany").value;
+            x = Number(x) * document.getElementById("updown").value;
+            document.getElementById("before").value = Convert(document.getElementById("before").value, x);
+        }
+        function toMin() {
+            document.getElementById("before").value = simplified(document.getElementById("before").value);
+        }
+        function byTon() {
+            let x = document.getElementById("aftermode").value - document.getElementById("beforemode").value;
+            if (x < -5.5) x += 12;
+            else if (x > 6.5) x = x - 12;
+            document.getElementById("before").value = Convert(document.getElementById("before").value, x);
+        }
+        function bShow() {
+            let x = Convert(document.getElementById("before").value, -1);
+            var a = ['#1', '#2', '#4', '#5', '#6'];
+            var b = ['b2', 'b3', 'b5', 'b6', 'b7'];
+            for (let i = 0; i < 5; i++) {
+                x = x.replace(new RegExp(a[i], 'gm'), b[i]);
+            }
+            document.getElementById("before").value = x;
+        }
+        function toExtreme() {
+            let y = findExtreme(document.getElementById("target").value)[document.getElementById("extremeMode").value];
+            if (y == 0.1) alert("请按je谱格式输入！");
+            else {
+                let x = findExtreme(document.getElementById("before").value)[document.getElementById("extremeMode").value];
+                document.getElementById("before").value = Convert(document.getElementById("before").value, y - x);
+            }
+        }
+        function printExtreme() {
+            let x = findExtreme(document.getElementById("before").value);
+            document.getElementById("situation").innerHTML = "最低音：" + indexToje(x[0]) + "   最高音：" + indexToje(x[1]);
+        }
+    </script>
+</body>
+
+</html>

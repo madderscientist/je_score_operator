@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简谱播放器</title>
+    <script src='https://surikov.github.io/webaudiofont/npm/dist/WebAudioFontPlayer.js'></script>
+    <script src='https://surikov.github.io/webaudiofontdata/sound/0320_Chaos_sf2_file.js'></script>
+    <style>
+        .parent {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            grid-row-gap: 5px;
+            height: 95%;
+            width: 100%;
+            position: fixed;
+        }
+        .div1 {
+            grid-area: 1 / 1 / 5 / 3;
+        }
+        .div2 {
+            grid-area: 5 / 1 / 6 / 3;
+        }
+        .div3 {
+            grid-area: 1 / 3 / 6 / 5;
+            overflow: scroll;
+        }
+    </style>
+    <script>
+        //套用的播放器
+        var AudioContextFunc = window.AudioContext || window.webkitAudioContext;
+        var audioContext = new AudioContextFunc();
+        var player = new WebAudioFontPlayer();
+        player.loader.decodeAfterLoading(audioContext, '_tone_0320_Chaos_sf2_file');
+        var stopplay = null;
+        function playKey(pitch) {
+            if (stopplay) { stopplay.cancel(); }
+            stopplay = player.queueWaveTable(audioContext, audioContext.destination, _tone_0320_Chaos_sf2_file, 0, pitch, 999, true);
+        }
+        //计时器
+        var clock;
+        var clockInterval = 260;
+        var n = 0;
+        var pitch = 0;
+        var note = ["1", "#1", "2", "#2", "3", "4", "#4", "5", "#5", "6", "#6", "7"];
+        var dp = 0;  //音偏移
+        function playje(text) {
+            if (n < text.length) {
+                while (n < text.length) {
+                    for (; n < text.length; n++) {              //音高
+                        if (text[n] == '[' || text[n] == ')') pitch += 12;
+                        else if (text[n] == ']' || text[n] == '(') pitch -= 12;
+                        else break;
+                    }
+                    if (text[n] == '\n' || text[n] == ' ') {    //空格换行停顿 
+                        n++;
+                        break;
+                    } else {
+                        let up = 0;
+                        if (n < text.length) {                  //升降
+                            if (text[n] == '#') up = 1;
+                            else if (text[n] == 'b') up = -1;
+                        }
+                        if (n + Math.abs(up) < text.length) {
+                            let noteid = note.indexOf(text[n + Math.abs(up)]);
+                            if (noteid > -1) {
+                                playKey(noteid + pitch + up + dp + 60);
+                                document.getElementById("playout").innerHTML = text.substr(0, n) + '<font color="red">' + text.substr(n, 1 + Math.abs(up)) + '</font>' + text.slice(n + Math.abs(up) + 1);
+                                n = n + Math.abs(up) + 1;
+                                break;
+                            } else {        //没找到，说明不是音符，不结束，找音符
+                                n++;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                n = 0;
+                pitch = 0;
+                clearInterval(clock);
+                if (stopplay) { stopplay.cancel(); }
+                document.getElementById("SP").innerHTML = '▶️';
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="parent">
+        <div class="div1">
+            <textarea id="inje" style="width: 90%;height: 100%;margin: auto;" placeholder="请放入je谱♪(´▽｀)"></textarea>
+        </div>
+        <div class="div2">
+            <button onclick="n=0;refreshplay();"
+                style="font-size: 40px;border: none; background-color: rgba(0,0,0,0);">⏮</button>
+            <button id="SP" onclick="SP(this);"
+                style="font-size: 40px;border: none; background-color: rgba(0,0,0,0);">▶️</button>
+            <div>
+                间隔毫秒：
+                <input type="range" max="800" min="60" id="speed" value="260"
+                    onchange="changeInterval(parseInt(this.value));">
+                <label id="ms">260</label>
+            </div>
+            <div>
+                音偏移：
+                <input type="range" max="12" min="-12" value="0"
+                    onchange="dp=parseInt(this.value);document.getElementById('dpo').innerHTML=dp;">
+                <label id="dpo">0</label>
+            </div>
+        </div>
+        <div class="div3">
+            <pre id="playout"></pre>
+        </div>
+    </div>
+
+</body>
+<script>
+    function refreshplay() {
+        clearInterval(clock);
+        clock = setInterval(playje, clockInterval, document.getElementById("inje").value);
+        document.getElementById("SP").innerHTML = '⏸';
+    }
+    function changeInterval(intervals) {
+        clockInterval = document.getElementById("speed").value;
+        document.getElementById("ms").innerHTML = clockInterval;
+        if (stopplay) refreshplay();
+    }
+    function SP(h) {
+        if (h.innerHTML == "▶️") {
+            clock = setInterval(playje, clockInterval, document.getElementById("inje").value);
+            h.innerHTML = '⏸';
+        } else {
+            clearInterval(clock);
+            stopplay.cancel();
+            stopplay = null;
+            h.innerHTML = '▶️';
+        }
+    }
+</script>
+
+</html>

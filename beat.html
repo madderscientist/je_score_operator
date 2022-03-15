@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://surikov.github.io/webaudiofont/npm/dist/WebAudioFontPlayer.js'></script>
+    <script src='https://surikov.github.io/webaudiofontdata/sound/0320_Chaos_sf2_file.js'></script>
+    <title>je节奏</title>
+    <script>
+        var AudioContextFunc = window.AudioContext || window.webkitAudioContext;
+        var audioContext = new AudioContextFunc();
+        var player = new WebAudioFontPlayer();
+        player.loader.decodeAfterLoading(audioContext, '_tone_0320_Chaos_sf2_file');
+        var stopplay = null;
+        function playKey(pitch) {
+            if (stopplay) { stopplay.cancel(); }
+            stopplay = player.queueWaveTable(audioContext, audioContext.destination, _tone_0320_Chaos_sf2_file, 0, pitch, 5, true);
+        }
+    </script>
+</head>
+
+<body>
+    点击开始后有节奏地按压键盘，结束后去mid界面生成mid
+    <textarea id="inje" style="width: 75%;height: 200px;"></textarea>
+    <button onclick="starte();">开始</button>
+    <button onclick="stope()">提前结束</button>
+    <a href="http://zhipu.lezhi99.com/Zhipu-index.html" target="_blank">前往生成mid</a>
+    <pre id="pujia" style="font-size: 20px;"></pre>
+</body>
+<script>
+    var note = ["1", "#1", "2", "#2", "3", "4", "#4", "5", "#5", "6", "#6", "7"];
+    var eventlist = {};     //按键事件
+    var rawje = [];         //按换行符划分的列表
+    var thenext = 0;        //下一个音的序号，midi制
+    var tonelist = [];      //音列表,[开始时间，音序号，终止时间]
+    var row = 0;
+    var n = 0;
+    var octave = 60;        //中央C为60
+
+    function purify(text) { //获取rawje
+        var rule = ['1', '2', '3', '4', '5', '6', '7', '#', '[', ']', '(', ')', '\n', ' '];//合法字符
+        let aft = '';
+        for (let i = 0; i < text.length; i++) {
+            if (rule.includes(text[i])) aft += text[i];
+        }
+        rawje = aft.split("\n");
+    }
+    function next() {       //下一音，谱架显示
+        let goon = true;
+        let text = rawje[row];
+        while (goon) {
+            if (n >= text.length) {         //一行结束
+                if (row < rawje.length - 1) {   //下一行
+                    text = rawje[++row];
+                    n = 0;
+                } else {                    //没有后面了
+                    document.getElementById("pujia").innerHTML = ((row == 0) ? '' : rawje[row - 1] + '\n') + text + "\n<font color='red'>再次点击则结束</font>";
+                    n = -1;
+                    break;
+                }
+            } else {                        //继续读取
+                while (n < text.length) {
+                    while (n < text.length) {
+                        if (text[n] == '(' || text[n] == ']') octave -= 12;
+                        else if (text[n] == '[' || text[n] == ')') octave += 12;
+                        else break;
+                        n++;
+                    }
+                    if (n < text.length) {
+                        let up = 0;
+                        if (text[n] == "#") up = 1;
+                        else if (text[n] == "b") up = -1;
+
+                        let absup = n + Math.abs(up);
+                        if (absup < text.length) {
+                            let noteid = note.indexOf(text[absup]);
+                            if (noteid >= 0) {
+                                thenext = noteid + up + octave;
+                                document.getElementById("pujia").innerHTML = ((row == 0) ? '' : rawje[row - 1] + '\n') + text.slice(0, n) +
+                                    "<font color='red'>" + text.substr(n, Math.abs(up) + 1) + "</font>" +
+                                    text.slice(1 + absup) + "\n" +
+                                    ((row < rawje.length - 1) ? (rawje[row + 1] + '\n' + ((row < rawje.length - 2) ? rawje[row + 2] : '')) : '');
+                                goon = false;
+                                n = absup + 1;
+                                break;
+                            } else n++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    function down(e) {
+        if (!eventlist[e.keyCode]) {
+            if (n == -1) { stope(); return; }
+            eventlist[e.keyCode] = [Date.now(), thenext];
+            playKey(thenext);
+            next();
+        }
+    }
+    function up(e) {
+        let temp = eventlist[e.keyCode];
+        tonelist.push([temp[0], temp[1], Date.now()]);
+        eventlist[e.keyCode] = null;
+    }
+
+    function dataANA() {
+        tonelist.sort(function (a, b) { return a[0] - b[0]; })
+        let base = tonelist[0][2];
+        var shortest = 9999;    //最短时长
+        var latest = tonelist[tonelist.length - 1][2] - base;   //总时长
+        var pure = new Array();          //取整后的音符列表
+
+        for (let i = 0; i < tonelist.length; i++) {         //开头置零，找到最短
+            let temp;
+            if (i < tonelist.length - 1) {
+                temp = tonelist[i + 1][0] - tonelist[i][2];
+                if (temp > 100) {    //空隙过大，当休止
+                    let temp2 = tonelist[i][2] - tonelist[i][0];
+                    pure.push([tonelist[i][1], temp2]);
+                    pure.push([-1, temp]);
+                    temp = temp2;
+                } else {
+                    temp = tonelist[i + 1][0] - tonelist[i][0];
+                    pure.push([tonelist[i][1], temp]);
+                }
+            } else { //最后一项
+                temp = tonelist[i][2] - tonelist[i][0];
+                pure.push([tonelist[i][1], temp]);
+            }
+            shortest = Math.min(shortest, temp);
+        }
+
+        base = 1;
+        for (let i = 0; i < pure.length; i++) {     //对最短取平均，减小误差
+            let temp = pure[i][1];
+            if (temp < shortest * 1.2 && temp > shortest * 0.9) { shortest += temp; base++; }
+        }
+        shortest /= base; //获取最短时长
+
+        function jinsi(x){
+            x=2*x/shortest;
+            let n=2**(Math.floor(Math.log(x)/0.693));
+            let min=Math.abs(n-x);
+            let derta=Math.abs(1.5*n-x);
+            if(min>derta){
+                min=derta;
+                derta=Math.abs(2*n-x);
+                if(min<derta) return 1.5*n;
+                else return 2*n;
+            }else return n;
+        }
+
+        base = 0;
+        for (let i = 0; i < pure.length; i++) {
+            let temp = pure[i];
+            temp[1] = jinsi(temp[1]);
+            base += temp[1];
+        }
+
+        let bmp = base * 30000 / latest;
+        console.log(bmp);
+        base = 2;
+        while (true) {
+            if (bmp > 150) { bmp /= 2; base *= 2; }
+            else if (bmp <= 75) { bmp *= 2; base /= 2; }
+            else break;
+        }
+
+        let result = { "beat": [Math.round(bmp), base, 4, 4], "notes": [pure] };
+        document.getElementById("inje").value = JSON.stringify(result);
+    }
+
+    function stope() {
+        document.removeEventListener("keyup", up);
+        document.removeEventListener("keydown", down);
+        if (stopplay) { stopplay.cancel(); }
+        document.getElementById("pujia").innerHTML = '';
+        if (tonelist.length) dataANA();
+    }
+    function starte() {
+        eventlist = {};
+        tonelist = [];
+        row = 0;
+        n = 0;
+        purify(document.getElementById("inje").value);
+        next();
+        document.addEventListener("keyup", up);
+        document.addEventListener("keydown", down);
+    }
+</script>
+
+</html>
