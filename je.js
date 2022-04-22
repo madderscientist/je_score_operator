@@ -228,7 +228,7 @@ function create_midi(data) {
     return hd.concat(tk0, note);
 }
 
-function MidiReader(data) {
+function MidiReader(data, mode=true) {  //mode:是按midi0还是按midi1(默认)解析
     /*
     .MTrk:事件列表，分音轨
     .tick：一个四分音符的tick数
@@ -242,6 +242,7 @@ function MidiReader(data) {
     let i = 17;
     let BMP = 0;
     let beat = [4, 2];
+    let mtn=0;  //音轨数
 
     function readmtrk() {   //读取一个音轨
         let timeline = 0;   //时刻，累加，为了多音轨合并
@@ -274,7 +275,7 @@ function MidiReader(data) {
                 }
             }
             if (flag) {
-                let x = event % 16;
+                let x = mode? mtn%16 : event % 16;
                 if (event < 192 || event > 223) {       //9x或8x或ax或bx或ex
                     MTrk[x].push([timeline, event, data[i], data[i + 1]]);
                     i += 2;
@@ -293,13 +294,20 @@ function MidiReader(data) {
 
     while (i < data.length) {
         if (data[i] == 107 && data[i - 1] == 114 && data[i - 2] == 84 && data[i - 3] == 77) {   //是mtrk
-            readmtrk();
+            readmtrk(); mtn++;
         }
         else i++;
     }
     for (i = 15; i >= 0; i--) {
         if (MTrk[i].length == 0) {
             MTrk.splice(i, 1);
+        }else{
+            console.log("st");
+
+            //新加入，排序，防多音轨有同一音轨
+            MTrk[i].sort(function (a, b) { return a[0] - b[0]; });
+            
+            console.log("en")
         }
     }
     this.beat = beat;
@@ -366,8 +374,11 @@ function FQ(midobj) { //传入mid对象
             if (l) l = '0' + l;
             for (let i = 0; i < ZHENG; i++) l += '0';
         }
-        if (ifnext) l += '|';
         this.BeatNum = this.BeatNum + ZHENG + XIAO;
+        if (ifnext) {
+            l += '|';
+            this.BeatNum=Math.round(this.BeatNum);  //防止.9999999
+        }
         return l;
     }
 
@@ -383,12 +394,13 @@ function FQ(midobj) { //传入mid对象
     }
 
     this.long = function (ticks, tone) {    //返回音+时值记号
-        var dx = ticks / atick;
+        var dx = ticks / atick;console.log(dx,tone,this.BeatNum,aBeat);
         var last = false;
         var out = '';
         while (1) {
             let n0 = Math.floor(this.BeatNum / aBeat);     //现在在第几小节
             let n = this.BeatNum + dx - (n0 + 1) * aBeat;  //加入后到第几小节
+            console.log("in ",this.BeatNum,n0,n,dx);
             if (n > -0.11) {  //如果加入后超小节了
                 let dn = dx - n;    //下一小节线的位置
                 out += this.notelen(tone, dn, last, true, n > 0.11);
@@ -404,7 +416,7 @@ function FQ(midobj) { //传入mid对象
         var fqjp = '';
         this.BeatNum = 0;
         for (let i = 0; i < data.length;) {
-            let temp = data[i];
+            let temp = data[i];console.log(JSON.stringify(temp));
             if (temp[1] > 127 && temp[1] < 160) {       //8x或9x
                 if (temp[1] > 143 && temp[3] != 0) {    //播放
                     let temp2 = [];
@@ -416,7 +428,7 @@ function FQ(midobj) { //传入mid对象
                             }
                         }
                     }
-                    if (!fqjp) fqjp = this.long(temp[0], '0');
+                    if (!fqjp) fqjp = this.long(temp[0], '0');console.log(JSON.stringify(temp2)+" temp2");
                     fqjp += this.long(temp2[0] - temp[0], this.indexTofq(temp[2]));
                 } else {
                     i++;
