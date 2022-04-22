@@ -8,7 +8,7 @@ je简谱处理工具，包括转调、制谱、播放、midi提取与制作等
 
 [je转调器](https://madderscientist.github.io/je_score_operator/zdq.html)<br>
 [je播放器](https://madderscientist.github.io/je_score_operator/playje.html)<br>
-[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)<br>
+[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)<br> 
 [制作midi（利用特定文本）](https://madderscientist.github.io/je_score_operator/midi.html)<br>
 [je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)
 
