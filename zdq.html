@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
-    <script src="./je.js" type="text/javascript"></script>
+    <script src="./je.js"></script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蔽夏转调器！</title>
@@ -12,9 +12,9 @@
 
 <body>
     <div>
-    <textarea onchange='printExtreme();' id="before" placeholder="这里输入je谱ˋ( ° ▽、° ) "
-    class="FormControl" style="width: 90%;height: 300px;margin: 10px auto 20px auto;"></textarea>
-    <p id="situation" style="text-align: center;">最高音：? 最低音：？</p>
+        <textarea onchange='printExtreme();' id="before" placeholder="这里输入je谱ˋ( ° ▽、° ) " class="FormControl"
+            style="width: 90%;height: 300px;margin: 10px auto 20px auto;"></textarea>
+        <p id="situation" style="text-align: center;">最高音：? 最低音：？</p>
     </div>
     <!-- 升降多少 -->
     <div style="display: flex;margin: 2em auto;width: 50%;">
@@ -74,9 +74,11 @@
         <input id="target" placeholder="请按je谱格式输入目标音" class="FormControl"></input>
         <button onclick='toExtreme();printExtreme();' class="Button Button--primary">转换！</button>
     </div>
-    <div style="margin: 1em auto;width: 200px;">
-    <button onclick="bShow();printExtreme();" class="Button Button--primary">1=#C记谱</button>
-    <button onclick="toMin();printExtreme();" class="Button Button--primary">一键最简</button>
+    <div style="display: flex;justify-content: space-evenly;">
+        <button onclick="bShow();printExtreme();" class="Button Button--primary">1=#C记谱</button>
+        <button onclick="toMin();printExtreme();" class="Button Button--primary">一键最简</button>
+        <button onclick="up3();" class="Button Button--primary">#3</button>
+        <button onclick="up7();" class="Button Button--primary">#7</button>
     </div>
 
     <script>
@@ -114,6 +116,21 @@
         function printExtreme() {
             let x = findExtreme(document.getElementById("before").value);
             document.getElementById("situation").innerHTML = "最低音：" + indexToje(x[0]) + "   最高音：" + indexToje(x[1]);
+        }
+        function up3() {
+            //先covert0是为了拆括号，防止最后一步消括号出现只消一边的问题
+            document.getElementById("before").value = Convert(document.getElementById("before").value, 0)
+                .replace(/#4/g, "ᗢ")
+                .replace(/4/g, "#3")
+                .replace(/ᗢ/g, "#4")
+                .replace(/\[\(/g, '').replace(/\)\]/g, '');
+        }
+        function up7() {
+            document.getElementById("before").value = Convert(document.getElementById("before").value, 0)
+                .replace(/#1/g, "ᗢ")
+                .replace(/1/g, "(#7)")
+                .replace(/ᗢ/g, "#1")
+                .replace(/\[\(/g, '').replace(/\)\]/g, '');
         }
     </script>
 </body>
