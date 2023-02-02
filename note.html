@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://madderscientist.github.io/jsPicLib/jsPic.js"></script>
+    <script src="https://madderscientist.github.io/jsPicLib/cluster.js"></script>
+    <script src="./je.js"></script>
+    <title>五线谱识别为je谱</title>
+</head>
+<style>
+    body {
+        background-color: antiquewhite;
+    }
+</style>
+<script>
+    var c = null;
+    var ctx = null;
+    var imgData = null;
+    var imgsrc = null;
+    window.onload = function () {     // body上面的script比body先加载, 其中的getelement必须等页面加载完才能成功
+        c = document.getElementById('picShow');
+        ctx = c.getContext('2d');
+        c.addEventListener('click', (e) => {
+            let pu = document.getElementById('pu');
+            pu.value = pu.value + ytoje(at(e.offsetY))
+        });
+        loadTemplate();
+    }
+    var template = 'data:image/jpeg;base64,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';
+    function loadTemplate() {
+        var img = new Image();
+        var cc = document.createElement('canvas')
+        var cctx = cc.getContext('2d');
+        img.onload = function () {
+            cc.width = this.width;
+            cc.height = this.height;
+            cctx.drawImage(img, 0, 0, this.width, this.height);
+            template = new jsPic().fromImageData(cctx.getImageData(0, 0, this.width, this.height), '1');
+        }
+        img.src = template;
+    }
+    function imgToCanvas(SRC) {
+        var img = new Image();
+        img.onload = function () {
+            c.width = this.width;
+            c.height = this.height;
+            ctx.drawImage(img, 0, 0, this.width, this.height);
+            imgData = ctx.getImageData(0, 0, this.width, this.height);
+        }
+        img.src = SRC;
+        imgsrc = SRC;
+    }
+    function receivePic(file) {     // 把图片画到画布上，获取图片信息
+        var fin = new FileReader();
+        fin.onload = function () {
+            if (FileReader.DONE == fin.readyState) {
+                imgToCanvas(fin.result)
+            }
+        }
+        fin.readAsDataURL(file);
+    }
+</script>
+
+<body>
+    <div>
+        <input type="file" accept="image/*" onchange="receivePic(this.files[0]);this.value = '';">（待识别的图片要白底，最好大点）<br>
+        <button onclick="PreProcess()">开始识别！</button>
+        <button onclick="noteDetect()">自动提取（垃圾算法，请先点“开始识别”按钮）</button><br>
+        [手动方案]点击图片里的音符将输出在→
+        <textarea id="pu" cols="50" rows="1"></textarea><br>
+        谱号、半音的识别还没做，现在全部当成高音谱号。
+        <a href="https://madderscientist.github.io/je_score_operator/zdq.html">转调器入口</a>
+    </div>
+    <canvas id="picShow"></canvas>
+    <!-- <canvas id="picShow2"></canvas> -->
+
+</body>
+<script>
+    var myclass = null;     // 转换成jspic的黑底白字二值化图
+    var B = null;   // [[第一组的第一条线的y, ...],第二组线的y, ...]
+    var spaces = null;      // float 一组线的平均线间距
+    var notes = null;
+    function PreProcess() {
+        console.time('PreProcess');
+        myclass = new jsPic().fromImageData(imgData, '1', 220);
+        let jspic = myclass.convolution({     // 水平模糊 除去竖线
+            kernel: [[0.3, 0.2, 0.1, 0, 0.1, 0.2, 0.3]],
+            padding: [3, 0]
+        });
+        jspic.throughChannel(0, x => x < 5 ? 255 : 0);
+        console.timeEnd('PreProcess');
+
+        // 标准霍夫变换找线，对结果聚类
+        console.time('hough lines');
+        let [k, b] = jspic.Hough(0, jspic.width * 0.7);
+        let x = Array.from({ length: k.length }, (_, i) => [k[i], b[i]]);
+        x = mean_shift(x, 2);   // 聚类
+        if (x.length < 5) {
+            alert('识别失败！');
+            return;
+        }
+        console.log("找到直线：",x.length);
+        k = Array.from(x, k => k[0]);
+        b = Array.from(x, k => Math.round(k[1]));
+        x = [];
+        for (let i = 0; i < k.length; i++) {
+            if (Math.abs(k[i]) < 0.05) {
+                x.push(b[i]);
+                ctx.moveTo(0, b[i]);
+                ctx.lineTo(c.width, b[i]);
+            }
+        }
+        ctx.strokeStyle = '#00ff00'; ctx.stroke();
+        console.timeEnd('hough lines');
+
+        // 直线数据分组，计算平均线间距
+        console.time('Organize data');
+        x.sort((a, b) => a - b);
+        jspic = new Uint8Array(x.length - 1);
+        for (let i = 0; i < x.length - 1; i++) jspic[i] = x[i + 1] - x[i];
+        // 简单聚类
+        jspic.sort((a, b) => a - b);
+        k = jspic[0] + jspic[1];  // k是临界值
+        for (let i = 2; i < jspic.length; i++) {
+            if (k / i * 2 < jspic[i]) { k = k / i * 2; break; }    // 第一个突然变大的
+            k += jspic[i];
+        }
+        B = [];
+        b = [x[0]];
+        for (let i = 1; i < x.length; i++) {
+            if (x[i] - x[i - 1] < k) b.push(x[i]);
+            else {
+                B.push(b);
+                b = [x[i]];
+            }
+        }
+        B.push(b);
+        B = B.filter(x => x.length == 5);
+        spaces = 0;
+        for (let i = 0; i < B.length; i++) {
+            for (let j = 1; j < B[i].length; j++) spaces += B[i][j] - B[i][j - 1];
+        }
+        spaces = spaces / B.length / 4;
+        // 准备模板
+        template = template.resize(Math.ceil(template.width * spaces / template.height), Math.ceil(spaces));
+        template.throughChannel(0, x => x < 150 ? 0 : 255)
+        myclass.throughChannel(0, x => 255 - x);
+        console.timeEnd('Organize data');
+
+
+        // let mm = myclass.toImageData([0, 0, 0, -1]);
+        // c2.width = myclass.width;
+        // c2.height = myclass.height;
+        // ctx2.putImageData(mm, 0, 0);
+    }
+    // let c2 = document.getElementById('picShow2');
+    // let ctx2 = c2.getContext('2d');
+    // function noHorizontalLine(){
+    //     let c = myclass.channel[0];
+    //     for(let i =0 ;i<B.length;i++){
+    //         for(let j=0;j<5;j++){
+    //             let horis = Array(3);
+    //             for(let t=0;t<3;t++){
+    //                 let y = B[i][j]-1+t;
+    //                 let hori = new Uint8ClampedArray(c[y]);
+    //                 for(let w=0;w<hori.length;w++){
+    //                     if(hori[w]!=0) hori[w] = Math.min(c[y-1][w],c[y+1][w]);
+    //                 }
+    //                 horis[t] = hori;
+    //             }
+
+    //             for(let t=0;t<3;t++) c[B[i][j]-1+t] = horis[t];
+    //         }
+    //     }
+
+    //     let k = myclass.toImageData([0, 0, 0, -1]);
+    //     ctx2.putImageData(k, 0, 0);
+    // }
+
+    function noteDetect() {
+        console.time('detect note');
+        let map = myclass.TemplateMatch(template, 0);
+        map = Array.from(map,x=>x/65025);
+        let nw = myclass.width - template.width + 1;
+        ctx.strokeStyle = '#fff000'
+        let xx = []
+        let level = template.height*template.width/49;
+        for (let i = 0; i < map.length; i++) {
+            if (map[i] < level) {
+                xx.push([i % nw, parseInt(i / nw)])
+            }
+        }
+        map = mean_shift(xx, parseInt(spaces/3));   // 聚类
+        ctx.fillStyle = 'red';
+        ctx.font = `${spaces*1.7}px sans-serif`
+        for (let i = 0; i < map.length; i++) {
+            ctx.strokeRect(map[i][0], map[i][1], template.width, template.height);
+            ctx.fillText(ytoje(at(map[i][1]+template.height/2)),map[i][0],map[i][1]+template.height);
+        }
+        console.log("找到音符：",map.length)
+        console.timeEnd('detect note');
+
+    }
+    function at(y) {
+        let index = 0;
+        let dis = imgData.height;
+        for (let i = 0; i < B.length; i++) {
+            let x = Math.abs(B[i][2] - y);
+            if (x < dis) {
+                index = i;
+                dis = x;
+            }
+        }
+        return Math.floor((y - B[index][2]) / spaces * 2 + 0.5);
+    }
+    function ytoje(y) {
+        y = 6 - y;
+        let name = (y % 7 + 7) % 7 + 1;
+        let k = Math.floor(y / 7);
+        let brackets = '';
+        for (let i = 0; i < Math.abs(k); i++) {
+            brackets = brackets + '[';
+        }
+        return ((k > 0) ? brackets : brackets.replace(/\[/g, '(')) + name + ((k > 0) ? brackets.replace(/\[/g, ']') : brackets.replace(/\[/g, ')'));
+    }
+</script>
+
+</html>
