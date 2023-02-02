@@ -2,7 +2,7 @@
 
 ## Abstruct
 
-je简谱处理工具，包括转调、制谱、播放、midi提取与制作等
+je简谱处理工具，包括转调、制谱、播放、midi提取与制作、五线谱识别等
 
 ## Demo
 
@@ -10,7 +10,8 @@ je简谱处理工具，包括转调、制谱、播放、midi提取与制作等
 [je播放器](https://madderscientist.github.io/je_score_operator/playje.html)<br>
 [midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)<br> 
 [制作midi（利用特定文本）](https://madderscientist.github.io/je_score_operator/midi.html)<br>
-[je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)
+[je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)<br>
+[五线谱->je(new)](https://madderscientist.github.io/je_score_operator/note.html)
 
 ## Explanation
 
@@ -64,9 +65,27 @@ je谱为约定俗成，并无严格规定格式。但为了各种工具的使用
 基本操作：输入je谱，点击开始，两个手指交替按压键盘，按下表示音开始，抬起表示音结束，根据记录的毫秒数，进行近似处理，得到“midi制作”所需的“特定文本”。
 
 
+### 五线谱识别为je谱
+
+[五线谱->je](https://madderscientist.github.io/je_score_operator/note.html)识别五线谱图片为je谱的工具。<br>
+暂时只有个初步实现。使用了我另一个项目“jsPic”来处理图片，因为opencv.js太大了而且不能改。目前效果很糟糕，不能用手写谱，底色要白色，图片大点。
+
+
 ## How I rescue je ?
 
 je谱诞生以来一直诟病不断，就是针对其缺少时值信息的缺点。本项目的解决方法：
 - ①利用[je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)确定je谱时值；
 - ②利用[制作midi](https://madderscientist.github.io/je_score_operator/midi.html)把得到的结果转为midi；
 - ③利用[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)把mid文件转为图片简谱。
+
+
+## 五线谱识别实现
+
+文档末尾细说一下五线谱识别的实现。目前（就是这个效果堪忧的版本）使用的方法是：
+
+- 标准霍夫变换+meanshift聚类，获取每根线的y坐标
+- 处理相邻线的间距，五根一组归类，获得平均间距
+- 有一个二分音符的模板文件（转成base64内嵌html了），按平均间距缩放，然后很简单地模板匹配，对结果聚类（所以只能识别四份音符和二分音符）
+- 根据匹配结果的y坐标和每组线的坐标得到je谱
+
+怎么样，很粗糙吧。。。
