@@ -3,97 +3,104 @@
 
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="./je.js"></script>
     <title>MIDI->je</title>
-    <script>
-        var songname = '';
-        var rawdata = [];       //原始数据
-        var mid = '';
-        function fstream(files) {
-            songname = files.name.slice(0, -4);
-            var reader = new FileReader();
-            mid = '';
-            try {
-                reader.readAsArrayBuffer(files);
-                reader.onload = function () {
-                    rawdata = new Uint8Array(this.result);
-                }
-            }
-            catch (err) {
-                rawdata = [];
-            }
-
-        }
-        function readmidistr(data) {
-            let a = "";
-            for (let i = 0; i < data.length; i++) {
-                a = a + data[i].toString(16) + " ";
-            }
-            document.getElementById("out").value = a;
-        }
-        function outstr(data) {          //数字谱输出，输入的应该是mtrk的一项
-            let output = '';
-            let duration = -1;
-            for (let i = 0; i < data.length; i++) {
-                let temp = data[i];
-                if (temp[1] > 143 && temp[1] < 160 && temp[3] != 0) {       //9x且响度不为0
-                    if ((temp[0] - duration) / mid.tick > 1.4 && duration >= 0) output += "\n";
-                    output += indexToje(temp[2] - 60);
-                    duration = temp[0];
-                }
-            }
-            return output;
-        }
-        function outnotelist(data) {    //音符列表输出，输入的应该是mtrk的一项
-            let output = [];
-            function rounding(ticks) {
-                let round = 2 * ticks / mid.tick;
-                let zheng = Math.floor(round);
-                let p = 2;
-                let xiao = (round - zheng) * 2;
-                for (; Math.abs(xiao - Math.round(xiao)) > 0.25 && p < 100;) {
-                    xiao *= 2; p *= 2;
-                }
-                return zheng + Math.round(xiao) / p;
-            }
-            for (let i = 0; i < data.length; i++) {
-                let temp = data[i];
-                if (temp[1] > 143 && temp[1] < 160 && temp[3] != 0) {       //9x且响度不为0
-                    let x = temp[1] - 144;
-                    let temp2;
-                    for (let j = i + 1; j < data.length; j++) {            //找结束
-                        temp2 = data[j];
-                        if (temp2[2] == temp[2] && (temp2[1] == 144 + x || temp2[1] == 128 + x)) {
-                            if (temp2[3] == 0 || temp2[1] < 144) break;
-                        }
-                    }
-                    output.push([temp[2], rounding(temp2[0] - temp[0]), rounding(temp[0])]);
-                }
-            }
-            return output;
-        }
-    </script>
 </head>
+<script>
+    var songname = '';
+    var rawdata = [];       //原始数据
+    var mid = '';
+    function fstream(files) {
+        songname = files.name.slice(0, -4);
+        var reader = new FileReader();
+        mid = '';
+        try {
+            reader.readAsArrayBuffer(files);
+            reader.onload = function () {
+                rawdata = new Uint8Array(this.result);
+            }
+        }
+        catch (err) {
+            rawdata = [];
+        }
+
+    }
+    function readmidistr(data) {
+        let a = "";
+        for (let i = 0; i < data.length; i++) {
+            a = a + data[i].toString(16) + " ";
+        }
+        document.getElementById("out").value = a;
+    }
+    function outstr(data) {          //数字谱输出，输入的应该是mtrk的一项
+        let output = '';
+        let duration = -1;
+        for (let i = 0; i < data.length; i++) {
+            let temp = data[i];
+            if (temp[1] > 143 && temp[1] < 160 && temp[3] != 0) {       //9x且响度不为0
+                if ((temp[0] - duration) / mid.tick > 1.4 && duration >= 0) output += "\n";
+                output += indexToje(temp[2] - 60);
+                duration = temp[0];
+            }
+        }
+        return output;
+    }
+    function outnotelist(data) {    //音符列表输出，输入的应该是mtrk的一项
+        let output = [];
+        function rounding(ticks) {
+            let round = 2 * ticks / mid.tick;
+            let zheng = Math.floor(round);
+            let p = 2;
+            let xiao = (round - zheng) * 2;
+            for (; Math.abs(xiao - Math.round(xiao)) > 0.25 && p < 100;) {
+                xiao *= 2; p *= 2;
+            }
+            return zheng + Math.round(xiao) / p;
+        }
+        for (let i = 0; i < data.length; i++) {
+            let temp = data[i];
+            if (temp[1] > 143 && temp[1] < 160 && temp[3] != 0) {       //9x且响度不为0
+                let x = temp[1] - 144;
+                let temp2;
+                for (let j = i + 1; j < data.length; j++) {            //找结束
+                    temp2 = data[j];
+                    if (temp2[2] == temp[2] && (temp2[1] == 144 + x || temp2[1] == 128 + x)) {
+                        if (temp2[3] == 0 || temp2[1] < 144) break;
+                    }
+                }
+                output.push([temp[2], rounding(temp2[0] - temp[0]), rounding(temp[0])]);
+            }
+        }
+        return output;
+    }
+</script>
+<style>
+    button {
+        margin: 0.5em;
+    }
+</style>
 
 <body>
     <input type="file" id="ifs" accept=".mid" onchange="fstream(this.files[0]);">
     <input id='midix' type="checkbox">文件是midi0<br>
-    <button onclick="startread(false);">转换为数字谱[分音轨]</button>
-    <button onclick="startread(true);">转换为数字谱[音轨合并]</button><br>
-    <button onclick="outobj();">转换为音符列表</button>
-    <button onclick="readmidistr(rawdata);">16进制解读</button>
-    <button onclick="fq();">番茄简谱脚本(mid请尽可能规范)</button>
+    <button class="Button Button--secondary" onclick="startread(false);">转换为数字谱[分音轨]</button>
+    <button class="Button Button--secondary" onclick="startread(true);">转换为数字谱[音轨合并]</button><br>
+    <button class="Button Button--secondary" onclick="outobj();">转换为音符列表</button>
+    <button class="Button Button--secondary" onclick="readmidistr(rawdata);">16进制解读</button>
+    <button class="Button Button--secondary" onclick="fq();">番茄简谱脚本(mid请尽可能规范)</button>
     <a href="http://zhipu.lezhi99.com/Zhipu-index.html" target="_blank">前往番茄简谱</a>
     <br>
-    <textarea id="out" style="width: 80%;height: 400px;margin: 10px 10% 0 10% ;" placeholder="输出"></textarea>
+    <textarea id="out" class="FormControl" style="width: 80%;height: 400px;margin: 10px 10% 0 10% ;"
+        placeholder="输出"></textarea>
 </body>
 <script>
     var ifcheck = false;
-    function reread(){
-        if(document.getElementById('midix').checked!=ifcheck) {mid='';ifcheck=document.getElementById('midix').checked;}
-        if (mid == '') mid = new MidiReader(rawdata,!ifcheck);
+    function reread() {
+        if (document.getElementById('midix').checked != ifcheck) { mid = ''; ifcheck = document.getElementById('midix').checked; }
+        if (mid == '') mid = new MidiReader(rawdata, !ifcheck);
     }
     function startread(ifmix) {
         if (rawdata.length > 4) {
@@ -120,7 +127,7 @@
         if (rawdata.length > 4) {
             reread();
             let mtrk = mid.MTrk;
-            let o = { "beat": [mid.bmp, 2, mid.beat[0], 2 ** mid.beat[1]], "notes": [] };
+            let o = { "beat": [mid.bpm, 2, mid.beat[0], 2 ** mid.beat[1]], "notes": [] };
             for (let i = 0; i < mtrk.length; i++) {
                 o.notes.push(outnotelist(mtrk[i]));
             }
@@ -160,7 +167,7 @@
                 outlist[i] = after;
             }
             //脚本头
-            let o = 'B: ' + songname + '\nZ: 佚名词曲\nD: C\nP: ' + mid.beat[0] + '/' + 2 ** mid.beat[1] + '\nJ: ' + mid.bmp + '\n';
+            let o = 'B: ' + songname + '\nZ: 佚名词曲\nD: C\nP: ' + mid.beat[0] + '/' + 2 ** mid.beat[1] + '\nJ: ' + mid.bpm + '\n';
             //拼接
             let linecount = 0;
             let Tlen = outlist[0].length;

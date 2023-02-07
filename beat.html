@@ -26,7 +26,7 @@
     <textarea id="inje" style="width: 75%;height: 200px;"></textarea>
     <button onclick="starte();">开始</button>
     <button onclick="stope()">提前结束</button>
-    <a href="https://madderscientist.github.io/je_score_operator/midi.html" target="_blank">前往生成mid</a>
+    <a href="http://zhipu.lezhi99.com/Zhipu-index.html" target="_blank">前往生成mid</a>
     <pre id="pujia" style="font-size: 20px;"></pre>
 </body>
 <script>
@@ -160,16 +160,16 @@
             base += temp[1];
         }
 
-        let bmp = base * 30000 / latest;
-        console.log(bmp);
+        let bpm = base * 30000 / latest;
+        console.log(bpm);
         base = 2;
         while (true) {
-            if (bmp > 150) { bmp /= 2; base *= 2; }
-            else if (bmp <= 75) { bmp *= 2; base /= 2; }
+            if (bpm > 150) { bpm /= 2; base *= 2; }
+            else if (bpm <= 75) { bpm *= 2; base /= 2; }
             else break;
         }
 
-        let result = { "beat": [Math.round(bmp), base, 4, 4], "notes": [pure] };
+        let result = { "beat": [Math.round(bpm), base, 4, 4], "notes": [pure] };
         document.getElementById("inje").value = JSON.stringify(result);
     }
 

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
-    <script src="./je.js" type="text/javascript"></script>
+    <script src="./je.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         .parent {
@@ -42,16 +42,16 @@
 <body>
     <div style="margin: 10px auto;width: 50%;">
         <textarea id="in" class="FormControl"
-            placeholder='{&#10"beat":&#10[bmp(必须有),四分音符的相对时长,节拍分子,节拍分母(默认4/4拍)],&#10"notes":[&#10[&#10[音,相对时长,开始的相对时刻(此项可省略)],&#10[第二个音信息]&#10……&#10],&#10[第二个音轨信息]……&#10]&#10}&#10'
+            placeholder='{&#10"beat":&#10[bpm(必须有),四分音符的相对时长,节拍分子,节拍分母(默认4/4拍)],&#10"notes":[&#10[&#10[音,相对时长,开始的相对时刻(此项可省略)],&#10[第二个音信息]&#10……&#10],&#10[第二个音轨信息]……&#10]&#10}&#10'
             style="margin: 10px 0 10px 0;height: 300px;width: 100%;"></textarea>
         <button onclick="creat();" class="Button Button--primary" style="margin: auto;width: 40%;">创建</button>
     </div>
     <div class="parent">
         <p id="div1">
-            输入格式：<br>{<br>"beat":<br>[bmp(必须有),四分音符的相对时长,节拍分子,节拍分母(不填，默认4/4拍)],<br>"notes":[<br>[<br>[音,相对时长,开始的相对时刻(此项可省略)],<br>[第二个音信息]<br>……<br>],<br>[第二个音轨信息]……<br>]<br>}
+            输入格式：<br>{<br>"beat":<br>[bpm(必须有),四分音符的相对时长,节拍分子,节拍分母(不填，默认4/4拍)],<br>"notes":[<br>[<br>[音,相对时长,开始的相对时刻(此项可省略)],<br>[第二个音信息]<br>……<br>],<br>[第二个音轨信息]……<br>]<br>}
         </p>
         <p id="div2">其中，“音”为数字，中央C(523hz)为60，范围[0,127]；超出范围的都是休止。音符首尾相连,“相对时长”一般为整数<br>
-            bmp填一分钟内四分音符的数量<br>
+            bpm填一分钟内四分音符的数量<br>
             notes为列表，放音轨，每个音轨为列表，放音符信息，每个音符信息为列表，放相对时长和音序号</p>
         <p id="div3">
             例如：双音轨的114514：<br>{"beat":[100,2],"notes":[[[60,1],[60,1],[65,1],[-1,1],[67,1],[60,1],[65,4]],[[48,1],[48,1],[53,2],[55,1],[48,1],[53,4]]]}
@@ -59,7 +59,7 @@
     </div>
     <div style="width: 300px;margin: auto;">
         简便输入：<button onclick="texttojson();" class="Button Button--primary" style="margin: 8px;">转换</button><br>
-        <input id="easyin1" class="FormControl" style="width: 100%;" placeholder="bmp,一个四分音符的相对时长"></input><br>
+        <input id="easyin1" class="FormControl" style="width: 100%;" placeholder="bpm,一个四分音符的相对时长"></input><br>
         <textarea id="easyin2" class="FormControl" style="width: 100%;height: 300px;"
             placeholder="音序号,相对时长,开始的相对时长(可不填)&#10音序号,相对时长,开始的相对时长(可不填)&#10&#10(隔一行表示换音轨)&#10音序号,相对时长,开始的相对时长(可不填)&#10……"></textarea>
     </div>

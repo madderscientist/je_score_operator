@@ -6,12 +6,13 @@ je简谱处理工具，包括转调、制谱、播放、midi提取与制作、�
 
 ## Demo
 
-[je转调器](https://madderscientist.github.io/je_score_operator/zdq.html)<br>
-[je播放器](https://madderscientist.github.io/je_score_operator/playje.html)<br>
-[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)<br> 
-[制作midi（利用特定文本）](https://madderscientist.github.io/je_score_operator/midi.html)<br>
-[je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)<br>
-[五线谱->je(new)](https://madderscientist.github.io/je_score_operator/note.html)
+- [je转调器](https://madderscientist.github.io/je_score_operator/zdq.html)
+- [je播放器](https://madderscientist.github.io/je_score_operator/playje.html)
+- [midi转je/简谱(老版)](https://madderscientist.github.io/je_score_operator/miditostr.html)
+[midi转je(新版 在更)](https://madderscientist.github.io/je_score_operator/midiparse.html) 两者功能不同
+- [制作midi（利用特定文本）](https://madderscientist.github.io/je_score_operator/midi.html)
+- [je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)
+- [五线谱->je(新坑)](https://madderscientist.github.io/je_score_operator/note.html)
 
 ## Explanation
 
@@ -49,9 +50,13 @@ je谱为约定俗成，并无严格规定格式。但为了各种工具的使用
 
 ### midi转je/简谱
 
-[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)——解析midi文件的工具。<br>
+[midi转je/简谱(老版)](https://madderscientist.github.io/je_score_operator/miditostr.html)——解析midi文件的工具。<br>
 基本原理：利用midi协议解读音符。【midi协议怎么看？[瞧这!](https://zhuanlan.zhihu.com/p/464166848)】可以解读为没有时值的je谱，也可以解读为‘番茄简谱’脚本：一个图片形式简谱制作网站，保留时值信息。<br>
-注意：所有的‘时长’均指相对时长，单位时长到底多长，由bmp参数确定。算法花费大心思近似，因此会导致误伤，最短只支持32分音符。
+注意：所有的‘时长’均指相对时长，单位时长到底多长，由bpm参数确定。算法花费大心思近似，因此会导致误伤，最短只支持32分音符。
+
+- [老版](https://madderscientist.github.io/je_score_operator/miditostr.html): 我自己写的解析，很粗糙，只提取了音高和时值信息；
+- [新版](https://madderscientist.github.io/je_score_operator/midiparse.html): 使用[Tone.js](https://github.com/Tonejs/Midi)解析，解析结果全面，虽然转je谱用不上，但是便于之后的开发。（用现成的轮子真香）
+- 异同：都可转je谱；老版可以转为番茄简谱脚本（因为番茄简谱功能较为局限）；新版转je谱**增加了对“同时”的体现**（两一起演奏的音会用<>括起来），后序我可能会自行绘制简谱。其余老版的功能不再重复。
 
 ### midi制作
 
@@ -68,7 +73,8 @@ je谱为约定俗成，并无严格规定格式。但为了各种工具的使用
 ### 五线谱识别为je谱
 
 [五线谱->je](https://madderscientist.github.io/je_score_operator/note.html)识别五线谱图片为je谱的工具。<br>
-暂时只有个初步实现。使用了我另一个项目“jsPic”来处理图片，因为opencv.js太大了而且不能改。目前效果很糟糕，不能用手写谱，底色要白色，图片大点。
+暂时只有个初步实现。使用了我另一个项目“jsPic”来处理图片，因为opencv.js太大了而且不能改。目前效果很糟糕，不能用手写谱，底色要白色，图片大点。<br>
+如果想要系统地转换，请看我的[文章](https://zhuanlan.zhihu.com/p/603150696)
 
 
 ## How I rescue je ?

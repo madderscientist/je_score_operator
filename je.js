@@ -1,7 +1,7 @@
 var note = ["1", "#1", "2", "#2", "3", "4", "#4", "5", "#5", "6", "#6", "7"];
 
-//主要函数，bef:要转换的内容；x:输入半音数目，正则升，负则降
-function Convert(bef, x) {
+//主要函数，bef:要转换的内容；x:输入半音数目，正则升，负则降；Note_aft:转换后的对照表
+function Convert(bef, x, Note_aft = note) {
     let aft = '';                 //转换后
     let n = 0;                    //位置
     let octave = 0;               //八度音高
@@ -25,7 +25,7 @@ function Convert(bef, x) {
                 N = m + position + x;
                 {
                     let p = (N % 12 + 12) % 12; //取N除12的模，不是余数！
-                    name = note[p];
+                    name = Note_aft[p];
                 }
                 pitch = octave + Math.floor(N / 12);
                 for (let i = 1; i <= Math.abs(pitch); i++) brackets = brackets + '[';
@@ -111,14 +111,14 @@ function indexToje(index) {
 //创建midi，返回midi数据列表
 function create_midi(data) {
     /*输入格式：
-    {"beat":[bmp,四分音符的相对时长,节拍分子,节拍分母],
+    {"beat":[bpm,四分音符的相对时长,节拍分子,节拍分母],
     "notes":[
-    [
-    [音,相对时长,开始的相对时刻(此项可省略)],
-    [第二个音信息]
-    ……
-    ],
-    [第二个音轨信息]……
+        [
+            [音,相对时长,开始的相对时刻(此项可省略)],
+            [第二个音信息]
+            ……
+        ],
+        [第二个音轨信息]……
     ]}
     */
     //如果没有对齐，记四分音符相对时长为0，让四份音符的相对时长等于实际毫秒值即可
@@ -230,9 +230,9 @@ function create_midi(data) {
 
 function MidiReader(data, mode=true) {  //mode:是按midi0还是按midi1(默认)解析
     /*
-    .MTrk:事件列表，分音轨
+    .MTrk: 事件列表，分音轨
     .tick：一个四分音符的tick数
-    .bmp：一分钟内四分音符的数量
+    .bpm：一分钟内四分音符的数量
     .beat: [分子,分母]
     */
     //防midi0：所有音轨信息在一个mtrk里
@@ -240,14 +240,14 @@ function MidiReader(data, mode=true) {  //mode:是按midi0还是按midi1(默认)
     //读文件头
     this.tick = data[12] * 256 + data[13];
     let i = 17;
-    let BMP = 0;
+    let BPM = 0;
     let beat = [4, 2];
     let mtn=0;  //音轨数
 
-    function readmtrk() {   //读取一个音轨
-        let timeline = 0;   //时刻，累加，为了多音轨合并
-        let event = 0;      //防midi简写，记录上一个事件种类
-        let ifover = true;  //是否读到结尾
+    function readmtrk() {   // 读取一个音轨
+        let timeline = 0;   // 时刻，累加，为了多音轨合并
+        let event = 0;      // 防midi简写，记录上一个事件种类
+        let ifover = true;  // 是否读到结尾
 
         function readnote() {   //读取一个事件，即事件分条列出
             //获取△t
@@ -264,7 +264,7 @@ function MidiReader(data, mode=true) {  //mode:是按midi0还是按midi1(默认)
                     flag = false;
                     let state = data[++i];
                     if (state == 47) { ifover = false; }
-                    else if (state == 81) { BMP = Math.round(60000000 / (data[i + 2] * 65536 + data[i + 3] * 256 + data[i + 4])); }//一个四分音符的微秒
+                    else if (state == 81) { BPM = Math.round(60000000 / (data[i + 2] * 65536 + data[i + 3] * 256 + data[i + 4])); }//一个四分音符的微秒
                     else if (state == 88) { beat[0] = data[i + 2]; beat[1] = data[i + 3]; } //节奏
                     i = i + 2 + data[i + 1];
                 } else if (data[i] == 240) {        //f0
@@ -311,7 +311,7 @@ function MidiReader(data, mode=true) {  //mode:是按midi0还是按midi1(默认)
         }
     }
     this.beat = beat;
-    this.bmp = BMP;
+    this.bpm = BPM;
     this.MTrk = MTrk;
 }
 

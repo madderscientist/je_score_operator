@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midi解析</title>
+    <script type="text/javascript" src="https://unpkg.com/@tonejs/midi"></script>
+    <script src="./je.js"></script>
+</head>
+
+<body>
+    <input type="file" accept="audio/midi" onchange="parseMidi(this.files[0])"/>
+    <button onclick="document.getElementById('out').value = JSON.stringify(midi, undefined, 2)">midi事件解析</button>
+    <div>
+        <button onclick="outje(false)">转换为数字谱[分音轨]</button>
+        <button onclick="outje(true)">转换为数字谱[音轨合并]</button>
+        <input id='sametime' type="checkbox">同时演奏的音保留最高音<br>
+    </div>
+
+    <textarea id="out" style="width: 80%;height: 400px;margin: 10px 10% 0 10% ;" placeholder="输出"></textarea>
+
+</body>
+<script>
+    var songname = "";          // 曲名
+    var midi = null;            // 存放解析后的midi
+    function parseMidi(file) {  // 调用Tone.js解析midi
+        songname = file.name.slice(0, -4);
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            midi = new Midi(e.target.result);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    function outje(ifmix = false) {
+        if(!midi){
+            alert("请选择文件！");
+            return;
+        }
+        let sametime = document.getElementById('sametime').checked;
+        function readtrack(track,ticks = midi.header.ppq){
+            let pu = "";
+            let together = false;
+            let shortest = ticks/64;    // 短于这个时间则认为是同时
+            let ln = ticks*1.4;         // 换行的界
+            let space = ticks*0.8;      // 空格的界
+            let tick = ticks;
+            for(let i = 0;i<track.length;i++){
+                let temp = together;
+                if(i!=track.length-1){
+                    tick = track[i+1].ticks - track[i].ticks;
+                    if(tick < shortest){   // 同时
+                        if(sametime) continue;
+                        if(!together){
+                            together = true;
+                            pu += '<';
+                        }
+                    } else {
+                        if(together) temp = true;      // 同时->不同时
+                    }
+                }
+
+                pu += indexToje(track[i].midi - 60);
+                if(temp){
+                    pu+='>';
+                    together = false;
+                }
+                if(!together){
+                    if(tick>=ln) pu+='\n';
+                    else if(tick>=space) pu+=' ';
+                }
+            }
+            return pu;
+        }
+        let out = sametime?'':"<>表示里面的音符同时演奏\n";
+        if(ifmix) {
+            let mix = [];
+            for(let i=0;i<midi.tracks.length;i++){
+                mix = mix.concat(midi.tracks[i].notes);
+            }
+            mix.sort((a,b)=>a.ticks==b.ticks?a.midi-b.midi:a.ticks-b.ticks);
+            out += readtrack(mix);
+        } else {
+            for(let i=0;i<midi.tracks.length;i++){
+                out += `track ${i}:\n`+readtrack(midi.tracks[i].notes) + '\n';
+            }
+            
+        }
+        document.getElementById('out').value = out;
+    }
+    function fq(){
+        
+    }
+</script>
+
+</html>
