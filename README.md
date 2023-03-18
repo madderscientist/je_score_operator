@@ -84,6 +84,8 @@ je谱诞生以来一直诟病不断，就是针对其缺少时值信息的缺点
 - ②利用[制作midi](https://madderscientist.github.io/je_score_operator/midi.html)把得到的结果转为midi；
 - ③利用[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)把mid文件转为图片简谱。
 
+## midi类
+本项目重新造了midi轮子（还未使用）。使用方法：[midi class](./midi%20class.md)
 
 ## 五线谱识别实现
 
