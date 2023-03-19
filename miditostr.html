@@ -6,179 +6,171 @@
     <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./midi.js"></script>
     <script src="./je.js"></script>
     <title>MIDI->je</title>
 </head>
-<script>
-    var songname = '';
-    var rawdata = [];       //原始数据
-    var mid = '';
-    function fstream(files) {
-        songname = files.name.slice(0, -4);
-        var reader = new FileReader();
-        mid = '';
-        try {
-            reader.readAsArrayBuffer(files);
-            reader.onload = function () {
-                rawdata = new Uint8Array(this.result);
-            }
-        }
-        catch (err) {
-            rawdata = [];
-        }
-
-    }
-    function readmidistr(data) {
-        let a = "";
-        for (let i = 0; i < data.length; i++) {
-            a = a + data[i].toString(16) + " ";
-        }
-        document.getElementById("out").value = a;
-    }
-    function outstr(data) {          //数字谱输出，输入的应该是mtrk的一项
-        let output = '';
-        let duration = -1;
-        for (let i = 0; i < data.length; i++) {
-            let temp = data[i];
-            if (temp[1] > 143 && temp[1] < 160 && temp[3] != 0) {       //9x且响度不为0
-                if ((temp[0] - duration) / mid.tick > 1.4 && duration >= 0) output += "\n";
-                output += indexToje(temp[2] - 60);
-                duration = temp[0];
-            }
-        }
-        return output;
-    }
-    function outnotelist(data) {    //音符列表输出，输入的应该是mtrk的一项
-        let output = [];
-        function rounding(ticks) {
-            let round = 2 * ticks / mid.tick;
-            let zheng = Math.floor(round);
-            let p = 2;
-            let xiao = (round - zheng) * 2;
-            for (; Math.abs(xiao - Math.round(xiao)) > 0.25 && p < 100;) {
-                xiao *= 2; p *= 2;
-            }
-            return zheng + Math.round(xiao) / p;
-        }
-        for (let i = 0; i < data.length; i++) {
-            let temp = data[i];
-            if (temp[1] > 143 && temp[1] < 160 && temp[3] != 0) {       //9x且响度不为0
-                let x = temp[1] - 144;
-                let temp2;
-                for (let j = i + 1; j < data.length; j++) {            //找结束
-                    temp2 = data[j];
-                    if (temp2[2] == temp[2] && (temp2[1] == 144 + x || temp2[1] == 128 + x)) {
-                        if (temp2[3] == 0 || temp2[1] < 144) break;
-                    }
-                }
-                output.push([temp[2], rounding(temp2[0] - temp[0]), rounding(temp[0])]);
-            }
-        }
-        return output;
-    }
-</script>
 <style>
     button {
         margin: 0.5em;
     }
 </style>
+<script>
+    var songname = '';
+    var mi = [];       //midi class obj
+    var rawdata;
+    function fstream(files) {
+        songname = files.name.slice(0, -4);
+        var reader = new FileReader();
+        try {
+            reader.readAsArrayBuffer(files);
+            reader.onload = function () {
+                rawdata = new Uint8Array(this.result);
+                mi = midi.import(rawdata);
+            }
+        }
+        catch (err) {
+            mi = null;
+        }
+    }
+    function download(data) {
+        let midfile = new Blob([data], { type: "application/octet-stream" });
+        let href = window.URL.createObjectURL(midfile);
+        let link = document.createElement('a');
+        link.href = href;
+        link.download = "newMIDI.mid";
+        link.click()
+    }
+</script>
 
 <body>
     <input type="file" id="ifs" accept=".mid" onchange="fstream(this.files[0]);">
-    <input id='midix' type="checkbox">文件是midi0<br>
-    <button class="Button Button--secondary" onclick="startread(false);">转换为数字谱[分音轨]</button>
-    <button class="Button Button--secondary" onclick="startread(true);">转换为数字谱[音轨合并]</button><br>
-    <button class="Button Button--secondary" onclick="outobj();">转换为音符列表</button>
+    <button class="Button Button--secondary" onclick="document.getElementById('out').value = JSON.stringify(mi.JSON(), undefined, 2)">midi事件解析</button>
     <button class="Button Button--secondary" onclick="readmidistr(rawdata);">16进制解读</button>
-    <button class="Button Button--secondary" onclick="fq();">番茄简谱脚本(mid请尽可能规范)</button>
-    <a href="http://zhipu.lezhi99.com/Zhipu-index.html" target="_blank">前往番茄简谱</a>
-    <br>
+    <div>
+        <button class="Button Button--secondary" onclick="outje(false)">转换为数字谱[分音轨]</button>
+        <button class="Button Button--secondary" onclick="outje(true)">转换为数字谱[音轨合并]</button>
+        <input id='sametime' type="checkbox">同时演奏的音保留最高音<br>
+    </div>
+    <div>
+        <button class="Button Button--secondary" onclick="fq(4);">番茄简谱脚本(mid请尽可能规范)</button>
+        <a href="http://zhipu.lezhi99.com/Zhipu-index.html" target="_blank">前往番茄简谱</a>
+    </div>
+
     <textarea id="out" class="FormControl" style="width: 80%;height: 400px;margin: 10px 10% 0 10% ;"
         placeholder="输出"></textarea>
 </body>
 <script>
-    var ifcheck = false;
-    function reread() {
-        if (document.getElementById('midix').checked != ifcheck) { mid = ''; ifcheck = document.getElementById('midix').checked; }
-        if (mid == '') mid = new MidiReader(rawdata, !ifcheck);
-    }
-    function startread(ifmix) {
-        if (rawdata.length > 4) {
-            reread();
-            let o = '';
-            let mtrk = mid.MTrk;
-            if (ifmix) {
-                let mixed = [];
-                for (let i = 0; i < mtrk.length; i++) {
-                    mixed = mixed.concat(mtrk[i]);
-                }
-                mixed.sort(function (a, b) { return a[0] - b[0]; });
-                o = outstr(mixed);
-            } else {
-                for (let i = 0; i < mtrk.length; i++) {
-                    o = o + 'Mtrk' + i + ':\n' + outstr(mtrk[i]) + '\n';
-                }
-            }
-            document.getElementById("out").value = o;
+    // 16进制解读
+    function readmidistr(data, hex = false) {
+        let a = "";
+        if(hex){
+            for (let i = 0; i < data.length; i++)
+                a = a+`,${data[i]}`;
+            a = a.substr(1);
+        }else{
+            for (let i = 0; i < data.length; i++)
+                a = a + data[i].toString(16) + " ";
         }
-        else alert("请选择midi文件！");
+        document.getElementById("out").value = a;
     }
-    function outobj() {
-        if (rawdata.length > 4) {
-            reread();
-            let mtrk = mid.MTrk;
-            let o = { "beat": [mid.bpm, 2, mid.beat[0], 2 ** mid.beat[1]], "notes": [] };
-            for (let i = 0; i < mtrk.length; i++) {
-                o.notes.push(outnotelist(mtrk[i]));
-            }
-            document.getElementById("out").value = JSON.stringify(o);
-        } else alert("请选择midi文件！");
-    }
-    function fq() {
-        if (rawdata.length > 4) {
-            reread();
-            let Mlen = mid.MTrk.length;
-            let outlist = [];
-            let FQobj = new FQ(mid);
-            for (let i = 0; i < Mlen; i++) {
-                let temp = FQobj.fqjb(mid.MTrk[i]);
-                outlist.push([temp, FQobj.BeatNum]);
-            }
-            //补齐,分割
-            FQobj.resettick(1);
-            for (let i = 0; i < Mlen; i++) {
-                let dtick = FQobj.maxBeatNum - outlist[i][1];
-                let text = outlist[i][0];
-                if (dtick > 0) text += FQobj.long(dtick, '0');
-
-                dtick = 0;
-                let base = 0;
-                let after = [];
-                while (base < text.length) {
-                    let count = 0;
-                    for (; dtick < text.length && count != 4; dtick++) {
-                        if (text[dtick] == '|') {
-                            count++;
+    // je谱输出
+    function outje(ifmix = false) {
+        if (!mi) {
+            alert("请选择文件！");
+            return;
+        }
+        let midi = mi.JSON();
+        let sametime = document.getElementById('sametime').checked;
+        function readtrack(track, ticks = midi.header.tick) {
+            let pu = "";
+            let together = false;
+            let shortest = ticks / 64;    // 短于这个时间则认为是同时
+            let ln = ticks * 1.4;         // 换行的界
+            let space = ticks * 0.8;      // 空格的界
+            let tick = ticks;
+            for (let i = 0; i < track.length; i++) {
+                let temp = together;
+                if (i != track.length - 1) {
+                    tick = track[i + 1].ticks - track[i].ticks;
+                    if (tick < shortest) {   // 同时
+                        if (sametime) continue;
+                        if (!together) {
+                            together = true;
+                            pu += '<';
                         }
+                    } else {
+                        if (together) temp = true;      // 同时->不同时
                     }
-                    after.push(text.slice(base, dtick));
-                    base = dtick;
                 }
-                outlist[i] = after;
-            }
-            //脚本头
-            let o = 'B: ' + songname + '\nZ: 佚名词曲\nD: C\nP: ' + mid.beat[0] + '/' + 2 ** mid.beat[1] + '\nJ: ' + mid.bpm + '\n';
-            //拼接
-            let linecount = 0;
-            let Tlen = outlist[0].length;
-            for (let i = 0; i < Tlen; i++) {
-                for (let j = 0; j < Mlen; j++) {
-                    o += 'Q' + String(j + 1) + ': ' + outlist[j][i] + '\n';
-                    if (++linecount % 14 == 0) o += '[fenye]\n';
+
+                pu += indexToje(track[i].midi - 60);
+                if (temp) {
+                    pu += '>';
+                    together = false;
+                }
+                if (!together) {
+                    if (tick >= ln) pu += '\n';
+                    else if (tick >= space) pu += ' ';
                 }
             }
-            document.getElementById("out").value = o;
-        } else alert("请选择midi文件！");
+            return pu;
+        }
+        let out = sametime ? '' : "<>表示里面的音符同时演奏\n";
+        if (ifmix) {
+            let mix = [];
+            for (let i = 0; i < midi.tracks.length; i++) {
+                mix = mix.concat(midi.tracks[i].notes);
+            }
+            mix.sort((a, b) => a.ticks == b.ticks ? a.midi - b.midi : a.ticks - b.ticks);
+            out += readtrack(mix);
+        } else {
+            for (let i = 0; i < midi.tracks.length; i++) {
+                out += `track ${i}:\n` + readtrack(midi.tracks[i].notes) + '\n';
+            }
+
+        }
+        document.getElementById('out').value = out;
+    }
+    // mid转为番茄简谱脚本
+    function fq(barNum = 4) {
+        mi.align(4);
+        document.getElementById('out').value = fanqie(mi, barNum);
+    }
+    /*====以下功能均未做接口====*/
+    // 翻转midi
+    function inverse(mid) {
+        let Mid = new midi(mid.bpm, [...mid.time_signature], mid.tick, [], mid.name);
+        for (let i = 0; i < mid.Mtrk.length; i++) {
+            let mt = mid.Mtrk[i];
+            mt.sort();
+            let a = Mid.addTrack();
+            a.name = mt.name;
+            mt = mt.events;
+            let endtick = mt[mt.length - 1].ticks;
+            for (let i = 0; i < mt.length; i++) {
+                if (mt[i].code == 0x9) {
+                    a.addEvent({
+                        ticks: endtick - mt[i].ticks,
+                        code: 0x9,
+                        value: [mt[i].value[0], mt[i].value[1] ? 0 : 100]
+                    })
+                }
+            }
+        }
+        return Mid;
+    }
+    // midi转调。x为升几个半音。负则降
+    function trans(x){
+        let mtrk = mi.Mtrk;
+        for(let i=0;i<mtrk.length;i++){
+            let amtrk = mtrk[i].events;
+            for(let j=0;j<amtrk.length;j++){
+                if(amtrk[j].code==9)
+                    amtrk[j].value[0]+=x;
+            }
+        }
+        download(mi.export());
     }
 </script>
 

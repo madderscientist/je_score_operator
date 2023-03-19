@@ -8,8 +8,7 @@ je简谱处理工具，包括转调、制谱、播放、midi提取与制作、�
 
 - [je转调器](https://madderscientist.github.io/je_score_operator/zdq.html)
 - [je播放器](https://madderscientist.github.io/je_score_operator/playje.html)
-- [midi转je/简谱(老版)](https://madderscientist.github.io/je_score_operator/miditostr.html)
-[midi转je(新版 在更)](https://madderscientist.github.io/je_score_operator/midiparse.html) 两者功能不同
+- [midi转je/简谱/番茄简谱脚本](https://madderscientist.github.io/je_score_operator/miditostr.html)
 - [制作midi（利用特定文本）](https://madderscientist.github.io/je_score_operator/midi.html)
 - [je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)
 - [五线谱->je(新坑)](https://madderscientist.github.io/je_score_operator/note.html)
@@ -50,19 +49,16 @@ je谱为约定俗成，并无严格规定格式。但为了各种工具的使用
 
 ### midi转je/简谱
 
-[midi转je/简谱(老版)](https://madderscientist.github.io/je_score_operator/miditostr.html)——解析midi文件的工具。<br>
+[midi转je/简谱/番茄简谱脚本](https://madderscientist.github.io/je_score_operator/miditostr.html)——解析midi文件的工具。<br>
 基本原理：利用midi协议解读音符。【midi协议怎么看？[瞧这!](https://zhuanlan.zhihu.com/p/464166848)】可以解读为没有时值的je谱，也可以解读为‘番茄简谱’脚本：一个图片形式简谱制作网站，保留时值信息。<br>
-注意：所有的‘时长’均指相对时长，单位时长到底多长，由bpm参数确定。算法花费大心思近似，因此会导致误伤，最短只支持32分音符。
-
-- [老版](https://madderscientist.github.io/je_score_operator/miditostr.html): 我自己写的解析，很粗糙，只提取了音高和时值信息；
-- [新版](https://madderscientist.github.io/je_score_operator/midiparse.html): 使用[Tone.js](https://github.com/Tonejs/Midi)解析，解析结果全面，虽然转je谱用不上，但是便于之后的开发。（用现成的轮子真香）
-- 异同：都可转je谱；老版可以转为番茄简谱脚本（因为番茄简谱功能较为局限）；新版转je谱**增加了对“同时”的体现**（两一起演奏的音会用<>括起来），后序我可能会自行绘制简谱。其余老版的功能不再重复。
+注意：所有的‘时长’均指相对时长，单位时长到底多长，由bpm参数确定。<br>
+本项目重新造了midi轮子。使用方法：[midi class](./midi%20class.md)
 
 ### midi制作
 
 [制作midi](https://madderscientist.github.io/je_score_operator/midi.html)——利用特定文本生成midi文件的工具。<br>
 所谓特定文本，即需要的json，需要给出音序号、时长、开始时间（可省略）。详见网站。若不写明开始时间，则默认在上一个音的后面追加。
-
+> 【之后会利用新造的midi轮子重新实现】
 
 ### je谱确定节奏
 
@@ -84,8 +80,6 @@ je谱诞生以来一直诟病不断，就是针对其缺少时值信息的缺点
 - ②利用[制作midi](https://madderscientist.github.io/je_score_operator/midi.html)把得到的结果转为midi；
 - ③利用[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)把mid文件转为图片简谱。
 
-## midi类
-本项目重新造了midi轮子（还未使用）。使用方法：[midi class](./midi%20class.md)
 
 ## 五线谱识别实现
 
