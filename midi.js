@@ -565,7 +565,7 @@ class midi {
         return j;
     }
     toJSON() {
-        return JSON.stringify(this.JSON());
+        return this.JSON();
     }
 }
 
