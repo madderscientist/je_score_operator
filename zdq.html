@@ -49,7 +49,7 @@
     <!-- 结果区 -->
     <div>
         <textarea onchange='printExtreme();' id="before" placeholder="这里输入je谱ˋ( ° ▽、° ) " class="FormControl"
-            style="width: 90%;height: 300px;margin: 10px auto 20px auto;"></textarea>
+            style="width: 90%;height: 320px;margin: 10px auto 20px auto;"></textarea>
         <p id="situation" style="text-align: center;">最高音：? 最低音：？</p>
     </div>
     <div class="tools">
@@ -127,11 +127,13 @@
             <button onclick="toMin();printExtreme();lessbrackets();" class="Button Button--primary margin_btn">一键最简</button>
             <div class="check"><input class="upx" type="checkbox" onchange="Note_aft[5] = this.checked?'#3':'4'">4->#3</div>
             <div class="check"><input class='upx' type="checkbox" onchange="Note_aft[0] = this.checked?'(#7)':'1'">[1]->#7</div>
+            <div class="check"><input class='upx' type="checkbox" onchange="autoup = this.checked">自动升记号<br>(口琴专用)</div>
             <div class="check"><input class='upx' type="checkbox" id="lessbrackets" checked="true">更少的括号</div>
         </div>
     </div>
 </body>
 <script>
+    var autoup = false;
     let Note_aft = [...note];       // 转换后每个音怎么显示
     function byNum() {
         let x = document.getElementById("howmany").value;
@@ -140,9 +142,9 @@
         if(n>=0){
             let tempnote = [...Note_aft]
             tempnote[n] = Convert(tempnote[n], x);
-            document.getElementById("before").value = Convert(document.getElementById("before").value, 0, tempnote);
+            document.getElementById("before").value = Convert(document.getElementById("before").value, 0, tempnote, autoup);
         }else{
-            document.getElementById("before").value = Convert(document.getElementById("before").value, x, Note_aft);
+            document.getElementById("before").value = Convert(document.getElementById("before").value, x, Note_aft, autoup);
         }
     }
     function toMin() {
@@ -152,7 +154,7 @@
         let x = document.getElementById("aftermode").value - document.getElementById("beforemode").value;
         if (x < -5.5) x += 12;
         else if (x > 6.5) x = x - 12;
-        document.getElementById("before").value = Convert(document.getElementById("before").value, x, Note_aft);
+        document.getElementById("before").value = Convert(document.getElementById("before").value, x, Note_aft, autoup);
     }
     function bShow() {
         let x = Convert(document.getElementById("before").value, -1);
@@ -168,7 +170,7 @@
         if (y == 0.1) alert("请按je谱格式输入！");
         else {
             let x = findExtreme(document.getElementById("before").value)[document.getElementById("extremeMode").value];
-            document.getElementById("before").value = Convert(document.getElementById("before").value, y - x, Note_aft);
+            document.getElementById("before").value = Convert(document.getElementById("before").value, y - x, Note_aft, autoup);
         }
     }
     function printExtreme() {
