@@ -3,59 +3,91 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
     <script src="./je.js"></script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蔽夏转调器！</title>
 </head>
 <style>
-    .tools{
-        margin: 2em auto;
-    }
-    @media screen and (max-width:700px) {
-        .tools{
-            width: 100%;
-        }        
-    }
-    @media screen and (min-width:701px) {
-        .tools{
-            width: 700px;
-        }        
+    :root {
+        --dombg-light: #e8ecf3;
+        --dombg-dark: #4d698e;
+        --domtext: #667c99;
+        --border-radius: 4px;
     }
 
-    .margin_btn{
-        margin: 2px 1em 2px 1em;
+    .minWidth-select {
+        min-width: 10.5em;
     }
-    .center-div{
+    @media (max-width: 600px) {
+        .minWidth-select {
+            min-width: 0;
+        }
+    }
+
+
+    .basicTheme {
+        display: block;
+        padding: 0.5em 1em;
+        margin: auto 0.3em;
+        box-sizing: border-box;
+        font-size: 16px;
+        line-height: 1.5;
+        color: var(--domtext);
+        background-color: var(--dombg-light);
+        border: 2px solid transparent;
+        border-radius: var(--border-radius);
+        transition: border-color .2s, background .2s;
+        appearance: none;
+    }
+
+    .basicTheme-focus:focus {
+        background-color: white;
+        outline-color: var(--dombg-dark);
+    }
+
+    .darkbg {
+        background-color: var(--dombg-dark);
+        color: var(--dombg-light);
+    }
+
+    .blod {
+        font-weight: bold;
+    }
+
+    .center-div {
         width: 100%;
         display: flex;
         justify-content: center;
+        align-items: center;
         margin: 1em auto;
     }
-    .check{
+
+    .check-div {
         display: flex;
         align-items: center;
-        font-size: 15px;
-        margin: 0 1em;
-        color: rgb(102,124,153);
+        font-size: inherit;
+        margin: 0 0.5em;
+        color: var(--domtext);
     }
-    .upx{
-        margin: 3px;
+    
+    .intro {
+        color: var(--dombg-dark);
+        font-weight: bold;
     }
 </style>
 
 <body>
     <!-- 结果区 -->
     <div>
-        <textarea onchange='printExtreme();' id="before" placeholder="这里输入je谱ˋ( ° ▽、° ) " class="FormControl"
-            style="width: 90%;height: 320px;margin: 10px auto 20px auto;"></textarea>
-        <p id="situation" style="text-align: center;">最高音：? 最低音：？</p>
+        <textarea onchange='printExtreme();' id="before" placeholder="这里输入je谱ˋ( ° ▽、° ) " class="basicTheme basicTheme-focus"
+            style="width: 90%; height: 320px; margin: 10px auto 20px auto;"></textarea>
+        <p id="situation" style="text-align: center; color: var(--dombg-dark);">最高音：? 最低音：？</p>
     </div>
-    <div class="tools">
+    <div>
         <!-- 升降多少 -->
         <div class="center-div">
-            <select id="selectNote" class="Select-input FormControl" style="margin-right: 1em;">
+            <select id="selectNote" class="basicTheme basicTheme-focus">
                 <option value="-1" selected="selected">所有音</option>
                 <option value="0">所有do(不含#1)</option>
                 <option value="2">所有re</option>
@@ -65,19 +97,19 @@
                 <option value="9">所有la</option>
                 <option value="11">所有si</option>
             </select>
-            <select id="updown" class="Select-input FormControl" style="margin-right: 1em;">
+            <select id="updown" class="basicTheme basicTheme-focus">
                 <option value="1" selected="selected">升</option>
                 <option value="-1">降</option>
             </select>
-            <input id="howmany" placeholder="这里输入升/降多少半音" class="FormControl" style="margin-right: 1em;"
+            <input id="howmany" placeholder="这里输入升/降多少半音" class="basicTheme basicTheme-focus"
                 onkeyup="this.value=this.value.replace(/[^0-9]/g,'');"></input>
-            <button onclick="byNum();printExtreme();lessbrackets();" class="Button Button--primary">转换！</button>
+            <button onclick="byNum();printExtreme();lessbrackets();" class="basicTheme darkbg blod">转换</button>
         </div>
         <!-- 按调性转 -->
         <div class="center-div">
-            <div style="margin-right: 1em;width: 100%;">
+            <div>
                 <span class="intro">转换前的调</span>
-                <select id="beforemode" class="Select-input FormControl">
+                <select id="beforemode" class="Select-input basicTheme minWidth-select">
                     <option value="0" selected="selected">1 = C</option>
                     <option value="1">1 = #C</option>
                     <option value="2">1 = D</option>
@@ -92,9 +124,9 @@
                     <option value="11">1 = B</option>
                 </select>
             </div>
-            <div style="margin-right: 1em;width: 100%;">
+            <div>
                 <span class="intro">转换后的调</span>
-                <select id="aftermode" class="Select-input FormControl">
+                <select id="aftermode" class="Select-input basicTheme minWidth-select">
                     <option value="0" selected="selected">1 = C</option>
                     <option value="1">1 = #C</option>
                     <option value="2">1 = D</option>
@@ -109,26 +141,31 @@
                     <option value="11">1 = B</option>
                 </select>
             </div>
-            <button onclick="byTon();printExtreme();lessbrackets();" class="Button Button--primary">转换！</button>
+            <div>
+                <span class="intro">&nbsp;</span>
+                <button onclick="byTon();printExtreme();lessbrackets();" class="basicTheme darkbg blod">转换</button>
+            </div>
         </div>
         <!-- 最音转换 -->
         <div class="center-div">
-            <select id='extremeMode' class="Select-input FormControl">
+            <select id='extremeMode' class="basicTheme basicTheme-focus">
                 <option value="0">最低音</option>
                 <option value="1">最高音</option>
             </select>
-            <span style="font-size: 1.6em; margin: auto 0.5em;">为</span>
-            <input id="target" placeholder="请按je谱格式输入目标音" class="FormControl" style="margin-right: 1em;"></input>
-            <button onclick='toExtreme();printExtreme();' class="Button Button--primary">转换！</button>
+            <span style="font-size: 1.3em;">为</span>
+            <input id="target" placeholder="请按je谱格式输入目标音" class="basicTheme basicTheme-focus"></input>
+            <button onclick='toExtreme();printExtreme();' class="basicTheme darkbg blod">转换</button>
         </div>
         <!-- 其他工具 -->
         <div class="center-div">
-            <button onclick="bShow();printExtreme();lessbrackets();" class="Button Button--primary margin_btn">1=#C记谱</button>
-            <button onclick="toMin();printExtreme();lessbrackets();" class="Button Button--primary margin_btn">一键最简</button>
-            <div class="check"><input class="upx" type="checkbox" onchange="Note_aft[5] = this.checked?'#3':'4'">4->#3</div>
-            <div class="check"><input class='upx' type="checkbox" onchange="Note_aft[0] = this.checked?'(#7)':'1'">[1]->#7</div>
-            <div class="check"><input class='upx' type="checkbox" onchange="autoup = this.checked">自动升记号<br>(口琴专用)</div>
-            <div class="check"><input class='upx' type="checkbox" id="lessbrackets" checked="true">更少的括号</div>
+            <button onclick="bShow();printExtreme();lessbrackets();"
+                class="basicTheme darkbg">1=#C记谱</button>
+            <button onclick="toMin();printExtreme();lessbrackets();"
+                class="basicTheme darkbg">一键最简</button>
+            <div class="check-div"><input type="checkbox" onchange="Note_aft[5] = this.checked?'#3':'4'">4→#3</div>
+            <div class="check-div"><input type="checkbox" onchange="Note_aft[0] = this.checked?'(#7)':'1'">[1]→#7</div>
+            <div class="check-div"><input type="checkbox" onchange="autoup = this.checked">自动升记号<br>(口琴专用)</div>
+            <div class="check-div"><input type="checkbox" id="lessbrackets" checked="true">更少括号</div>
         </div>
     </div>
 </body>
@@ -139,11 +176,11 @@
         let x = document.getElementById("howmany").value;
         x = Number(x) * document.getElementById("updown").value;
         let n = document.getElementById('selectNote').value;
-        if(n>=0){
+        if (n >= 0) {
             let tempnote = [...Note_aft]
             tempnote[n] = Convert(tempnote[n], x);
             document.getElementById("before").value = Convert(document.getElementById("before").value, 0, tempnote, autoup);
-        }else{
+        } else {
             document.getElementById("before").value = Convert(document.getElementById("before").value, x, Note_aft, autoup);
         }
     }
@@ -175,13 +212,15 @@
     }
     function printExtreme() {
         let x = findExtreme(document.getElementById("before").value);
-        document.getElementById("situation").innerHTML = "最低音：" + indexToje(x[0]) + "   最高音：" + indexToje(x[1]);
+        let h = indexToje(x[0]); if(!h) h = '?';
+        let l = indexToje(x[1]); if(!l) l = '?';
+        document.getElementById("situation").innerHTML = `最低音：${h}   最高音：${l}`;
     }
-    function lessbrackets(){
+    function lessbrackets() {
         let dom = document.getElementById("before");
         dom.value = dom.value.replace(/\[\(/g, '').replace(/\)\]/g, '');
-        if(document.getElementById('lessbrackets').checked)
-            dom.value = dom.value.replace(/\]\[/g,'').replace(/\)\(/g,'').replace(/\]\[/g,'').replace(/\)\(/g,'')
+        if (document.getElementById('lessbrackets').checked)
+            dom.value = dom.value.replace(/\]\[/g, '').replace(/\)\(/g, '').replace(/\]\[/g, '').replace(/\)\(/g, '')
     }
 </script>
 

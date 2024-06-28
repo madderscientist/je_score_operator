@@ -104,6 +104,7 @@ function findExtreme(content) {
 
 //把序号转换为je音符，0-->1
 function indexToje(index) {
+    if (index != (index | 0)) return '';
     let position = (index % 12 + 12) % 12;
     let k = Math.floor(index / 12);
     let brackets = '';
@@ -233,94 +234,7 @@ function create_midi(data) {
     return hd.concat(tk0, note);
 }
 
-function MidiReader(data, mode = true) {  //mode:是按midi0还是按midi1(默认)解析
-    /*
-    .MTrk: 事件列表，分音轨
-    .tick：一个四分音符的tick数
-    .bpm：一分钟内四分音符的数量
-    .beat: [分子,分母]
-    */
-    //防midi0：所有音轨信息在一个mtrk里
-    let MTrk = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []];
-    //读文件头
-    this.tick = data[12] * 256 + data[13];
-    let i = 17;
-    let BPM = 0;
-    let beat = [4, 2];
-    let mtn = 0;  //音轨数
-
-    function readmtrk() {   // 读取一个音轨
-        let timeline = 0;   // 时刻，累加，为了多音轨合并
-        let event = 0;      // 防midi简写，记录上一个事件种类
-        let ifover = true;  // 是否读到结尾
-
-        function readnote() {   //读取一个事件，即事件分条列出
-            //获取△t
-            let interval = 0;
-            while (data[i] > 127) {
-                interval = interval * 128 + (data[i++] - 128);
-            }
-            interval = interval * 128 + data[i++];
-            timeline += interval;
-            //处理事件
-            let flag = true;
-            if (data[i] > 127) {                    //标明事件，更新事件，fx在这处理
-                if (data[i] == 255) {               //ff
-                    flag = false;
-                    let state = data[++i];
-                    if (state == 47) { ifover = false; }
-                    else if (state == 81) { BPM = Math.round(60000000 / (data[i + 2] * 65536 + data[i + 3] * 256 + data[i + 4])); }//一个四分音符的微秒
-                    else if (state == 88) { beat[0] = data[i + 2]; beat[1] = data[i + 3]; } //节奏
-                    i = i + 2 + data[i + 1];
-                } else if (data[i] == 240) {        //f0
-                    flag = false;
-                    i = i + 2 + data[i + 1];
-                } else {
-                    event = data[i++];
-                }
-            }
-            if (flag) {
-                let x = mode ? mtn % 16 : event % 16;
-                if (event < 192 || event > 223) {       //9x或8x或ax或bx或ex
-                    MTrk[x].push([timeline, event, data[i], data[i + 1]]);
-                    i += 2;
-                } else {                                //cx或dx
-                    MTrk[x].push([timeline, event, data[i]]);
-                    i += 1;
-                }
-            }
-        }
-
-        //操控读取音符
-        for (i += 5; ifover;) {                          //跳过长度标识。i的增加在readnote里面
-            readnote();
-        }
-    }
-
-    while (i < data.length) {
-        if (data[i] == 107 && data[i - 1] == 114 && data[i - 2] == 84 && data[i - 3] == 77) {   //是mtrk
-            readmtrk(); mtn++;
-        }
-        else i++;
-    }
-    for (i = 15; i >= 0; i--) {
-        if (MTrk[i].length == 0) {
-            MTrk.splice(i, 1);
-        } else {
-            console.log("st");
-
-            //新加入，排序，防多音轨有同一音轨
-            MTrk[i].sort(function (a, b) { return a[0] - b[0]; });
-
-            console.log("en")
-        }
-    }
-    this.beat = beat;
-    this.bpm = BPM;
-    this.MTrk = MTrk;
-}
-
-function FQ(midobj) { //传入mid对象
+function FQ(midobj) {   //传入midi对象
     var fqnote = ["1", "1#", "2", "2#", "3", "4", "4#", "5", "5#", "6", "6#", "7"];
     var longlist = [1, 0.75, 0.5, 0.375, 0.25, 0.1875, 0.125, 0.11];
 
