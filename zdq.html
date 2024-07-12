@@ -19,6 +19,7 @@
     .minWidth-select {
         min-width: 10.5em;
     }
+
     @media (max-width: 600px) {
         .minWidth-select {
             min-width: 0;
@@ -29,7 +30,7 @@
     .basicTheme {
         display: block;
         padding: 0.5em 1em;
-        margin: auto 0.3em;
+        margin: 1px 0.3em;
         box-sizing: border-box;
         font-size: 16px;
         line-height: 1.5;
@@ -51,16 +52,22 @@
         color: var(--dombg-light);
     }
 
+    .lightbg {
+        background-color: var(--dombg-light);
+        color: var(--domtext);
+    }
+
     .blod {
         font-weight: bold;
     }
 
     .center-div {
-        width: 100%;
+        width: fit-content;
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 1em auto;
+        margin: 0.8em auto;
+        flex-wrap: wrap;
     }
 
     .check-div {
@@ -70,17 +77,64 @@
         margin: 0 0.5em;
         color: var(--domtext);
     }
-    
+
     .intro {
         color: var(--dombg-dark);
         font-weight: bold;
     }
+
+    #sharpModePanel {
+        background-color: var(--dombg-light);
+        padding: 0.4em;
+        border-radius: 0.4em;
+        position: relative;
+    }
+
+    #sharpModePanel::before {
+        content: '';
+        width: 1em;
+        height: 1em;
+        top: -0.5em;
+        transform: translateX(3em) rotate(45deg);
+        background-color: var(--dombg-light);
+        position: absolute;
+    }
 </style>
+<script>
+    var semiMode = null;
+    window.addEventListener('load', () => {
+        semiMode = document.getElementById('semiMode');
+        semiMode._semiMode = true;
+        Object.defineProperty(semiMode, 'semiMode', {
+            get: function () { return this._semiMode; },
+            set: function (mode) {
+                this._semiMode = mode;
+                if (mode) {
+                    this.classList.remove('darkbg');
+                    this.classList.add('lightbg');
+                    this.textContent = '当前半音: #';
+                } else {
+                    this.classList.remove('lightbg');
+                    this.classList.add('darkbg');
+                    this.textContent = '当前半音: b';
+                }
+            }
+        });
+        const sharpModePanel = document.getElementById('sharpModePanel');
+        sharpModePanel._semiMode = true;
+        Object.defineProperty(sharpModePanel, 'semiMode', {
+            get: function () { return this._semiMode; },
+            set: function (mode) { this.style.display = (this._semiMode = mode) ? 'flex' : 'none'; }
+        });
+    });
+</script>
 
 <body>
     <!-- 结果区 -->
     <div>
-        <textarea onchange='printExtreme();' id="before" placeholder="这里输入je谱ˋ( ° ▽、° ) " class="basicTheme basicTheme-focus"
+        <textarea onchange='printExtreme();' id="before"
+            placeholder="这里输入je谱ˋ( ° ▽、° )&#13;&#10;注：&#13;&#10;◉ (低音) 中音 [高音]，括号可嵌套 #升半音 b降半音&#13;&#10;◉ E调→C调 ⇔ 1→3&#13;&#10;◉ 1=#C是口琴的记谱方式，这里用降记号代替还原号&#13;&#10;◉ “自动升记号”会根据上一个音符决定用4/#3、1/#7"
+            class="basicTheme basicTheme-focus"
             style="width: 90%; height: 320px; margin: 10px auto 20px auto;"></textarea>
         <p id="situation" style="text-align: center; color: var(--dombg-dark);">最高音：? 最低音：？</p>
     </div>
@@ -158,66 +212,88 @@
         </div>
         <!-- 其他工具 -->
         <div class="center-div">
-            <button onclick="bShow();printExtreme();lessbrackets();"
-                class="basicTheme darkbg">1=#C记谱</button>
-            <button onclick="toMin();printExtreme();lessbrackets();"
-                class="basicTheme darkbg">一键最简</button>
+            <button onclick="naturalShow();printExtreme();lessbrackets();" class="basicTheme darkbg">1=#C记谱</button>
+            <button onclick="toMin();printExtreme();lessbrackets();" class="basicTheme darkbg">一键最简</button>
+            <button onclick="switchSemiMode();" id="semiMode" class="basicTheme lightbg">当前半音: #</button>
+            <div class="check-div"><input type="checkbox" id="lessbrackets" checked>更少括号</div>
+        </div>
+        <!-- 半音模式: #模式的面板 -->
+        <div class="center-div" id="sharpModePanel" style="display: flex;">
+            <!-- UI保证了当前处于#模式，故不做过多判断 -->
             <div class="check-div"><input type="checkbox" onchange="Note_aft[5] = this.checked?'#3':'4'">4→#3</div>
             <div class="check-div"><input type="checkbox" onchange="Note_aft[0] = this.checked?'(#7)':'1'">[1]→#7</div>
-            <div class="check-div"><input type="checkbox" onchange="autoup = this.checked">自动升记号<br>(口琴专用)</div>
-            <div class="check-div"><input type="checkbox" id="lessbrackets" checked="true">更少括号</div>
+            <div class="check-div"><input type="checkbox" id="autoup">自动升记号<br>(口琴专用)</div>
         </div>
     </div>
 </body>
 <script>
-    var autoup = false;
-    let Note_aft = [...note];       // 转换后每个音怎么显示
+    const upNotes = [..._upNotes];
+    const downNotes = _downNotes;
+    var Note_aft = upNotes;       // 转换后每个音怎么显示
+
     function byNum() {
         let x = document.getElementById("howmany").value;
         x = Number(x) * document.getElementById("updown").value;
         let n = document.getElementById('selectNote').value;
+        let autoup = document.getElementById('autoup').checked & semiMode.semiMode;
+        const before = document.getElementById("before");
         if (n >= 0) {
             let tempnote = [...Note_aft]
-            tempnote[n] = Convert(tempnote[n], x);
-            document.getElementById("before").value = Convert(document.getElementById("before").value, 0, tempnote, autoup);
+            tempnote[n] = Convert(tempnote[n], x, Note_aft, false);
+            before.value = Convert(before.value, 0, tempnote, autoup);
         } else {
-            document.getElementById("before").value = Convert(document.getElementById("before").value, x, Note_aft, autoup);
+            before.value = Convert(before.value, x, Note_aft, autoup);
         }
     }
     function toMin() {
-        document.getElementById("before").value = simplified(document.getElementById("before").value);
+        const before = document.getElementById("before");
+        before.value = simplified(before.value);
     }
     function byTon() {
-        let x = document.getElementById("aftermode").value - document.getElementById("beforemode").value;
+        let x = document.getElementById("beforemode").value - document.getElementById("aftermode").value;
+        let autoup = document.getElementById('autoup').checked & semiMode.semiMode;
         if (x < -5.5) x += 12;
         else if (x > 6.5) x = x - 12;
-        document.getElementById("before").value = Convert(document.getElementById("before").value, x, Note_aft, autoup);
+        const before = document.getElementById("before");
+        before.value = Convert(before.value, x, Note_aft, autoup);
     }
-    function bShow() {
-        let x = Convert(document.getElementById("before").value, -1);
+    function naturalShow() {
+        const before = document.getElementById("before");
+        let x = Convert(before.value, -1);
         var a = ['#1', '#2', '#4', '#5', '#6'];
         var b = ['b2', 'b3', 'b5', 'b6', 'b7'];
         for (let i = 0; i < 5; i++) {
             x = x.replace(new RegExp(a[i], 'gm'), b[i]);
         }
-        document.getElementById("before").value = x;
+        before.value = x;
+    }
+    function switchSemiMode() {
+        const sharpModePanel = document.getElementById('sharpModePanel');
+        const semiMode = document.getElementById('semiMode');
+        Note_aft = (semiMode.semiMode = sharpModePanel.semiMode = !semiMode.semiMode) ? upNotes : downNotes;
+        const before = document.getElementById("before");
+        let autoup = document.getElementById('autoup').checked & semiMode.semiMode;
+        before.value = Convert(before.value, 0, Note_aft, autoup);
+        printExtreme(); lessbrackets();
     }
     function toExtreme() {
         let y = findExtreme(document.getElementById("target").value)[document.getElementById("extremeMode").value];
         if (y == 0.1) alert("请按je谱格式输入！");
         else {
-            let x = findExtreme(document.getElementById("before").value)[document.getElementById("extremeMode").value];
-            document.getElementById("before").value = Convert(document.getElementById("before").value, y - x, Note_aft, autoup);
+            const before = document.getElementById("before");
+            let x = findExtreme(before.value)[document.getElementById("extremeMode").value];
+            let autoup = document.getElementById('autoup').checked & semiMode.semiMode;
+            before.value = Convert(before.value, y - x, Note_aft, autoup);
         }
     }
     function printExtreme() {
         let x = findExtreme(document.getElementById("before").value);
-        let h = indexToje(x[0]); if(!h) h = '?';
-        let l = indexToje(x[1]); if(!l) l = '?';
+        let h = indexToje(x[0], Note_aft); if (!h) h = '?';
+        let l = indexToje(x[1], Note_aft); if (!l) l = '?';
         document.getElementById("situation").innerHTML = `最低音：${h}   最高音：${l}`;
     }
     function lessbrackets() {
-        let dom = document.getElementById("before");
+        const dom = document.getElementById("before");
         dom.value = dom.value.replace(/\[\(/g, '').replace(/\)\]/g, '');
         if (document.getElementById('lessbrackets').checked)
             dom.value = dom.value.replace(/\]\[/g, '').replace(/\)\(/g, '').replace(/\]\[/g, '').replace(/\)\(/g, '')

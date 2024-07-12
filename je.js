@@ -1,4 +1,7 @@
-var note = ["1", "#1", "2", "#2", "3", "4", "#4", "5", "#5", "6", "#6", "7"];
+const _upNotes = ["1", "#1", "2", "#2", "3", "4", "#4", "5", "#5", "6", "#6", "7"];
+const _downNotes = ["1", "b2", "2", "b3", "3", "4", "b5", "5", "b6", "6", "b7", "7"];
+
+var note = _upNotes;
 
 //主要函数，bef:要转换的内容；x:输入半音数目，正则升，负则降；Note_aft:转换后的对照表
 function Convert(bef, x, Note_aft = note, autoup = false) {
@@ -103,7 +106,7 @@ function findExtreme(content) {
 }
 
 //把序号转换为je音符，0-->1
-function indexToje(index) {
+function indexToje(index, noteMap = note) {
     if (index != (index | 0)) return '';
     let position = (index % 12 + 12) % 12;
     let k = Math.floor(index / 12);
@@ -111,7 +114,7 @@ function indexToje(index) {
     for (let i = 0; i < Math.abs(k); i++) {
         brackets = brackets + '[';
     }
-    return ((k > 0) ? brackets : brackets.replace(/\[/g, '(')) + note[position] + ((k > 0) ? brackets.replace(/\[/g, ']') : brackets.replace(/\[/g, ')'));
+    return ((k > 0) ? brackets : brackets.replace(/\[/g, '(')) + noteMap[position] + ((k > 0) ? brackets.replace(/\[/g, ']') : brackets.replace(/\[/g, ')'));
 }
 
 //创建midi，返回midi数据列表
