@@ -620,7 +620,7 @@ function fanqie(mid, barNum = 4) {
         let temp = j.header.timeSignatures;
         for (let i = 0; i < temp.length; i++) {
             es.push([temp[i].ticks, 1, `"p:${temp[i].timeSignature[0]}/${temp[i].timeSignature[1]}"`]);
-            let step = Math.round(anote * temp[i].timeSignature[0] / Math.pow(2, 2 - Math.log2(temp[i].timeSignature[1])));
+            let step = Math.round(anote * temp[i].timeSignature[0] * Math.pow(2, 2 - Math.log2(temp[i].timeSignature[1])));
             let endtick = temp[i + 1] ? temp[i + 1].ticks : maxtick;
             for (let k = temp[i].ticks + step; k <= endtick; k += step) {
                 es.push([k, 0, '', '|']);    // 最后一位是前缀
