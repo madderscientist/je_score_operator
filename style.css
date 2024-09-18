@@ -1,0 +1,63 @@
+:root {
+    --dombg-light: #e8ecf3;
+    --dombg-dark: #4d698e;
+    --domtext: #667c99;
+    --border-radius: 4px;
+}
+/* 给按钮之类的元素添加基本样式 */
+.basicTheme {
+    display: block;
+    padding: 0.5em 1em;
+    margin: 1px 0.3em;
+    box-sizing: border-box;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--domtext);
+    background-color: var(--dombg-light);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    transition: border-color .2s, background .2s;
+    appearance: none;
+}
+/* 如果需要focus效果则继续添加此类 */
+/* 比如下拉框、文本框 */
+.basicTheme-focus:focus {
+    background-color: white;
+    outline-color: var(--dombg-dark);
+}
+/* 如果要深色背景色则添加此类（默认浅色背景） */
+.darkbg {
+    background-color: var(--dombg-dark);
+    color: var(--dombg-light);
+}
+/* 默认的浅色背景 在basicTheme类中已经设置了 */
+.lightbg {
+    background-color: var(--dombg-light);
+    color: var(--domtext);
+}
+/* 字体加粗 */
+.blod {
+    font-weight: bold;
+}
+/* 居中 用于div */
+.center-div {
+    width: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.8em auto;
+    flex-wrap: wrap;
+}
+/* 给div用的，内容是checkbox和文字 */
+.check-div {
+    display: flex;
+    align-items: center;
+    font-size: inherit;
+    margin: 0 0.5em;
+    color: var(--domtext);
+}
+/* 用于标题的文字（深色加粗） */
+.intro {
+    color: var(--dombg-dark);
+    font-weight: bold;
+}

@@ -3,35 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
+    <link rel="stylesheet" href="./style.css">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="./midi.js"></script>
     <script src="./je.js"></script>
     <title>MIDI->je</title>
 </head>
-<style>
-    button {
-        margin: 0.5em;
-    }
-</style>
 <script>
     var songname = '';
     var mi = [];       // midi class obj
     var rawdata;
-    function fstream(files) {
-        songname = files.name.slice(0, -4);
-        var reader = new FileReader();
-        try {
-            reader.readAsArrayBuffer(files);
+    function fstream(file) {
+        songname = file.name.slice(0, -4);
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
             reader.onload = function () {
                 rawdata = new Uint8Array(this.result);
                 mi = midi.import(rawdata);
+                resolve();
             }
-        }
-        catch (err) {
-            mi = null;
-        }
+            reader.onerror = () => {
+                mi = null;
+                reject();
+            };
+            reader.readAsArrayBuffer(file);
+        });
     }
     function download(data) {
         let midfile = new Blob([data], { type: "application/octet-stream" });
@@ -41,34 +38,58 @@
         link.download = "newMIDI.mid";
         link.click()
     }
+    // 为了样式统一，将input:file替换成button
+    function registInputFile(inputFileDom) {
+        const btn = document.createElement('button');
+        btn.textContent = '选择文件';
+        btn.style.cssText = inputFileDom.style.cssText;
+        const onchange = inputFileDom.onchange;
+        const accept = inputFileDom.accept;
+        btn.className = inputFileDom.className;
+        btn.onclick = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = accept;
+            input.onchange = async (event) => {
+                await onchange.bind(input)(event);
+                btn.textContent = songname;
+            };
+            input.click();
+        }
+        inputFileDom.insertAdjacentElement('beforebegin', btn);
+        inputFileDom.remove();
+    }
 </script>
 
 <body>
-    <input type="file" id="ifs" accept=".mid" onchange="fstream(this.files[0]);">
-    <button class="Button Button--secondary" onclick="document.getElementById('out').value = JSON.stringify(mi.JSON(), undefined, 2)">midi事件解析</button>
-    <button class="Button Button--secondary" onclick="readmidistr(rawdata);">16进制解读</button>
-    <div>
-        <button class="Button Button--secondary" onclick="outje(false)">转换为数字谱[分音轨]</button>
-        <button class="Button Button--secondary" onclick="outje(true)">转换为数字谱[音轨合并]</button>
-        <input id='sametime' type="checkbox">同时演奏的音保留最高音<br>
+    <div class="center-div">
+        <input type="file" id="fin" accept=".mid" class="basicTheme darkbg" style="cursor: pointer; max-width: 100%;" onchange="fstream(this.files[0]);">
+        <button class="basicTheme" onclick="document.getElementById('out').value = JSON.stringify(mi.JSON(), undefined, 2);">midi事件解析</button>
+        <button class="basicTheme" onclick="readmidistr(rawdata);">16进制解读</button>
     </div>
-    <div>
-        <button class="Button Button--secondary" onclick="fq(4);">番茄简谱脚本(mid请尽可能规范)</button>
+    <div class="center-div">
+        <button class="basicTheme" onclick="outje(false)">转换为数字谱[分音轨]</button>
+        <button class="basicTheme" onclick="outje(true)">转换为数字谱[音轨合并]</button>
+        <div class="check-div"><input id='sametime' type="checkbox">同时演奏的音保留最高音</div>
+    </div>
+    <div class="center-div">
+        <button class="basicTheme" onclick="fq(4);">番茄简谱脚本(mid请尽可能规范)</button>
         <a href="http://zhipu.lezhi99.com/Zhipu-index.html" target="_blank">前往番茄简谱</a>
     </div>
-
-    <textarea id="out" class="FormControl" style="width: 80%;height: 400px;margin: 10px 10% 0 10% ;"
+    <textarea id="out" class="basicTheme basicTheme-focus"
+        style="width: 80%;height: 400px;margin: 10px 10% 0 10%;"
         placeholder="输出"></textarea>
 </body>
 <script>
+    registInputFile(document.getElementById('fin'));
     // 16进制解读
     function readmidistr(data, hex = false) {
         let a = "";
-        if(hex){
+        if (hex) {
             for (let i = 0; i < data.length; i++)
-                a = a+`,${data[i]}`;
+                a = a + `,${data[i]}`;
             a = a.substr(1);
-        }else{
+        } else {
             for (let i = 0; i < data.length; i++)
                 a = a + data[i].toString(16) + " ";
         }
@@ -161,13 +182,13 @@
         return Mid;
     }
     // midi转调。x为升几个半音。负则降
-    function trans(x){
+    function trans(x) {
         let mtrk = mi.Mtrk;
-        for(let i=0;i<mtrk.length;i++){
+        for (let i = 0; i < mtrk.length; i++) {
             let amtrk = mtrk[i].events;
-            for(let j=0;j<amtrk.length;j++){
-                if(amtrk[j].code==9)
-                    amtrk[j].value[0]+=x;
+            for (let j = 0; j < amtrk.length; j++) {
+                if (amtrk[j].code == 9)
+                    amtrk[j].value[0] += x;
             }
         }
         download(mi.export());

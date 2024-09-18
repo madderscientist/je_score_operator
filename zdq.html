@@ -3,19 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="./style.css">
     <script src="./je.js"></script>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蔽夏转调器！</title>
 </head>
 <style>
-    :root {
-        --dombg-light: #e8ecf3;
-        --dombg-dark: #4d698e;
-        --domtext: #667c99;
-        --border-radius: 4px;
-    }
-
     .minWidth-select {
         min-width: 10.5em;
     }
@@ -24,63 +18,6 @@
         .minWidth-select {
             min-width: 0;
         }
-    }
-
-
-    .basicTheme {
-        display: block;
-        padding: 0.5em 1em;
-        margin: 1px 0.3em;
-        box-sizing: border-box;
-        font-size: 16px;
-        line-height: 1.5;
-        color: var(--domtext);
-        background-color: var(--dombg-light);
-        border: 2px solid transparent;
-        border-radius: var(--border-radius);
-        transition: border-color .2s, background .2s;
-        appearance: none;
-    }
-
-    .basicTheme-focus:focus {
-        background-color: white;
-        outline-color: var(--dombg-dark);
-    }
-
-    .darkbg {
-        background-color: var(--dombg-dark);
-        color: var(--dombg-light);
-    }
-
-    .lightbg {
-        background-color: var(--dombg-light);
-        color: var(--domtext);
-    }
-
-    .blod {
-        font-weight: bold;
-    }
-
-    .center-div {
-        width: fit-content;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0.8em auto;
-        flex-wrap: wrap;
-    }
-
-    .check-div {
-        display: flex;
-        align-items: center;
-        font-size: inherit;
-        margin: 0 0.5em;
-        color: var(--domtext);
-    }
-
-    .intro {
-        color: var(--dombg-dark);
-        font-weight: bold;
     }
 
     #sharpModePanel {
@@ -163,7 +100,7 @@
         <div class="center-div">
             <div>
                 <span class="intro">转换前的调</span>
-                <select id="beforemode" class="Select-input basicTheme minWidth-select">
+                <select id="beforemode" class="Select-input basicTheme basicTheme-focus minWidth-select">
                     <option value="0" selected="selected">1 = C</option>
                     <option value="1">1 = #C</option>
                     <option value="2">1 = D</option>
@@ -180,7 +117,7 @@
             </div>
             <div>
                 <span class="intro">转换后的调</span>
-                <select id="aftermode" class="Select-input basicTheme minWidth-select">
+                <select id="aftermode" class="Select-input basicTheme basicTheme-focus minWidth-select">
                     <option value="0" selected="selected">1 = C</option>
                     <option value="1">1 = #C</option>
                     <option value="2">1 = D</option>
