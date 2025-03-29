@@ -703,6 +703,7 @@ function fanqie(mid, barNum = 4) {
     let maxtick = 0;
     for (let i = 0; i < j.tracks.length; i++) {
         let temp = j.tracks[i].notes;
+        if (!temp.length) continue;
         temp = temp[temp.length - 1];
         maxtick = Math.max(maxtick, temp.ticks + temp.durationTicks);
     }
