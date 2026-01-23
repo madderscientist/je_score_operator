@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="./midi.js"></script>
+    <script src="./fq.js"></script>
     <script src="./je.js"></script>
     <title>MIDI->je</title>
 </head>
@@ -157,7 +158,7 @@
     // mid转为番茄简谱脚本
     function fq(barNum = 4) {
         mi.align(4);
-        document.getElementById('out').value = fanqie(mi, barNum);
+        document.getElementById('out').value = FQ.mid2fanqie(mi, barNum);
     }
     /*====以下功能均未做接口====*/
     // 翻转midi
