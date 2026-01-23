@@ -77,9 +77,11 @@ je谱为约定俗成，并无严格规定格式。但为了各种工具的使用
 ## How I rescue je ?
 
 je谱诞生以来一直诟病不断，就是针对其缺少时值信息的缺点。本项目的解决方法：
-- ①利用[je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html)确定je谱时值；
-- ②利用[制作midi](https://madderscientist.github.io/je_score_operator/midi.html)把得到的结果转为midi；
-- ③利用[midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr)把mid文件转为图片简谱。
+- ①利用 [je谱确定节奏](https://madderscientist.github.io/je_score_operator/beat.html) 确定je谱时值；
+- ②利用 [制作midi](https://madderscientist.github.io/je_score_operator/midi.html) 把得到的结果转为midi；
+- ③利用 [midi转je/简谱](https://madderscientist.github.io/je_score_operator/miditostr) 把mid文件转为图片简谱。
+
+为了更自动化地赋予je谱时值，我借助 [noteDigger](https://madderscientist.github.io/noteDigger/) 平台，实现了一个粗略的“[je谱和音乐对齐](https://www.bilibili.com/video/BV142enz3EUH)”，输入音乐和je谱就能得到大概的音符时间；配合其“节拍检测”可以更进一步实现时值创建。
 
 
 ## 五线谱识别实现

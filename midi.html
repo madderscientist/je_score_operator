@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" href="https://www.acgmuse.com/assets/forum-b23888be.css">
-    <script src="./je.js"></script>
-    <script src="./midi.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         .parent {
@@ -66,6 +64,125 @@
     </div>
 </body>
 <script>
+    //创建midi，返回midi数据列表
+    function create_midi(data) {
+        /*输入格式：
+        {"beat":[bpm,四分音符的相对时长,节拍分子,节拍分母],
+        "notes":[
+            [
+                [音,相对时长,开始的相对时刻(此项可省略)],
+                [第二个音信息]
+                ……
+            ],
+            [第二个音轨信息]……
+        ]}
+        */
+        //如果没有对齐，记四分音符相对时长为0，让四份音符的相对时长等于实际毫秒值即可
+        var head = [77, 84, 114, 107];
+        var end = [0, 255, 47, 0];
+        var tknum = 1;              //音轨数
+        var itime;                  //四分音符相对时长
+
+        function datalen(data) {    //返回MTrk数据长度，4字节
+            let i = data.length;
+            let result = new Array(4);
+            for (let j = 3; j > -1; j--) {
+                result[j] = i % 256;
+                i = Math.floor(i / 256);
+            }
+            return result;
+        }
+        function setsty(beatinf) {      //设置时长、节拍，返回全局音轨
+            //一个四分音符的微秒数
+            let derta = Math.round(60000000 / beatinf[0]);
+            //一个四分音符的相对时长
+            itime = beatinf[1];
+            if (!itime) itime = derta / 1000;
+            //把一个四份音符的微秒数转为16进制t，midi规范要求固定为3字节
+            let t = new Array(3);
+            for (let i = 2; i > -1; i--) {
+                t[i] = (derta % 256);
+                derta = Math.floor(derta / 256);
+            }
+            //节拍信息
+            let fenmu;
+            if (beatinf[3]) {
+                let temp = parseInt(beatinf[3]);
+                fenmu = 0;
+                while (temp > 1) {
+                    temp /= 2;
+                    fenmu++;
+                }
+            } else fenmu = 2;
+            let b = [0, 255, 88, 4, (beatinf[2]) ? beatinf[2] : 4, fenmu, 24, 8];
+            //整合信息部分
+            t = [0, 255, 81, 3].concat(t, b, end);
+            //生成全局音轨
+            return head.concat(datalen(t), t);
+        }
+        function addmtrk(data) {    //添加音轨,基本思路：按时间线排好事件
+            let dt = 0;
+            let time = new Array();
+
+            function dertat(ticknum) {  //设置△t，输入tick数，返回时间16进制列表
+                ticknum = ticknum.toString(2);
+                let i = ticknum.length, j = Math.ceil(i / 7) * 7;
+                for (; i < j; i++) {
+                    ticknum = '0' + ticknum;
+                }
+                let t = new Array();
+                for (i = 0; i + 7 < j; i = i + 7) {
+                    t.push('1' + ticknum.substring(i, i + 7));
+                }
+                t.push('0' + ticknum.substr(-7, 7));
+                for (i = 0; i < t.length; i++) {
+                    t[i] = parseInt(t[i], 2);
+                }
+                return t;
+            }
+            function addnote(data) {
+                let note = data[0];
+                if (data.length == 2) {
+                    time.push([dt, 143 + tknum, note, 100]);
+                    dt += data[1];
+                    time.push([dt, 127 + tknum, note, 0]);
+                }
+                else {
+                    time.push([data[2], 143 + tknum, note, 100]);
+                    dt = data[2] + data[1];         //兼容两项和三项
+                    time.push([dt, 127 + tknum, note, 0]);
+                }
+            }
+            //得到时刻表
+            for (let i = 0; i < data.length; i++) {
+                addnote(data[i]);
+            }
+            //理顺时间
+            time.sort(function (a, b) { return a[0] - b[0]; });
+            //整理成数据
+            dt = 0;
+            let tk = new Array();
+            for (let i = 0; i < time.length; i++) {
+                let temp = time[i];
+                if (temp[2] > -1 && temp[2] < 128) {
+                    let DT = temp[0] - dt;
+                    dt = temp[0];
+                    tk = tk.concat(dertat(Math.round(120 * DT / itime)), [temp[1], temp[2], temp[3]]);
+                }
+            }
+            tk = tk.concat(end);
+            tknum++;
+            return head.concat(datalen(tk), tk);
+        }
+        //整合信息
+        let tk0 = setsty(data.beat);
+        let note = new Array();
+        for (let i = 0; i < data.notes.length; i++) {
+            note = note.concat(addmtrk(data.notes[i]));
+        }
+        let hd = [77, 84, 104, 100, 0, 0, 0, 6, 0, 1, 0, tknum, 0, 120];  //固定的文件头，midi1，1+x个音轨，120tick
+        return hd.concat(tk0, note);
+    }
     function creat() {
         let ax = create_midi(JSON.parse(document.getElementById('in').value));
         let data = new Uint8Array(ax);

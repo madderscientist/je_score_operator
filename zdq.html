@@ -164,8 +164,8 @@
     </div>
 </body>
 <script>
-    const upNotes = [..._upNotes];
-    const downNotes = _downNotes;
+    const upNotes = [...JE.upNotes];
+    const downNotes = [...JE.downNotes];
     var Note_aft = upNotes;       // 转换后每个音怎么显示
 
     function byNum() {
@@ -176,15 +176,15 @@
         const before = document.getElementById("before");
         if (n >= 0) {
             let tempnote = [...Note_aft]
-            tempnote[n] = Convert(tempnote[n], x, Note_aft, false);
-            before.value = Convert(before.value, 0, tempnote, autoup);
+            tempnote[n] = JE.convert(tempnote[n], x, Note_aft, false);
+            before.value = JE.convert(before.value, 0, tempnote, autoup);
         } else {
-            before.value = Convert(before.value, x, Note_aft, autoup);
+            before.value = JE.convert(before.value, x, Note_aft, autoup);
         }
     }
     function toMin() {
         const before = document.getElementById("before");
-        before.value = simplified(before.value);
+        before.value = JE.simplified(before.value);
     }
     function byTon() {
         let x = document.getElementById("beforemode").value - document.getElementById("aftermode").value;
@@ -192,11 +192,11 @@
         if (x < -5.5) x += 12;
         else if (x > 6.5) x = x - 12;
         const before = document.getElementById("before");
-        before.value = Convert(before.value, x, Note_aft, autoup);
+        before.value = JE.convert(before.value, x, Note_aft, autoup);
     }
     function naturalShow() {
         const before = document.getElementById("before");
-        let x = Convert(before.value, -1);
+        let x = JE.convert(before.value, -1);
         var a = ['#1', '#2', '#4', '#5', '#6'];
         var b = ['b2', 'b3', 'b5', 'b6', 'b7'];
         for (let i = 0; i < 5; i++) {
@@ -210,23 +210,23 @@
         Note_aft = (semiMode.semiMode = sharpModePanel.semiMode = !semiMode.semiMode) ? upNotes : downNotes;
         const before = document.getElementById("before");
         let autoup = document.getElementById('autoup').checked & semiMode.semiMode;
-        before.value = Convert(before.value, 0, Note_aft, autoup);
+        before.value = JE.convert(before.value, 0, Note_aft, autoup);
         printExtreme(); lessbrackets();
     }
     function toExtreme() {
-        let y = findExtreme(document.getElementById("target").value)[document.getElementById("extremeMode").value];
+        let y = JE.findExtreme(document.getElementById("target").value)[document.getElementById("extremeMode").value];
         if (y == 0.1) alert("请按je谱格式输入！");
         else {
             const before = document.getElementById("before");
-            let x = findExtreme(before.value)[document.getElementById("extremeMode").value];
+            let x = JE.findExtreme(before.value)[document.getElementById("extremeMode").value];
             let autoup = document.getElementById('autoup').checked & semiMode.semiMode;
-            before.value = Convert(before.value, y - x, Note_aft, autoup);
+            before.value = JE.convert(before.value, y - x, Note_aft, autoup);
         }
     }
     function printExtreme() {
-        let x = findExtreme(document.getElementById("before").value);
-        let h = indexToje(x[0], Note_aft); if (!h) h = '?';
-        let l = indexToje(x[1], Note_aft); if (!l) l = '?';
+        let x = JE.findExtreme(document.getElementById("before").value);
+        let h = JE.indexToje(x[0], Note_aft); if (!h) h = '?';
+        let l = JE.indexToje(x[1], Note_aft); if (!l) l = '?';
         document.getElementById("situation").innerHTML = `最低音：${h}   最高音：${l}`;
     }
     function lessbrackets() {

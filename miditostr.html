@@ -73,7 +73,8 @@
         <div class="check-div"><input id='sametime' type="checkbox">同时演奏的音保留最高音</div>
     </div>
     <div class="center-div">
-        <button class="basicTheme" onclick="fq(4);">番茄简谱脚本(mid请尽可能规范)</button>
+        <div class="check-div"><input type="number" id="fqLine" value="4" class="basicTheme basicTheme-focus" style="width: 5em;">小节一行</div>
+        <button class="basicTheme" onclick="fq(parseInt(fqLine.value));">番茄简谱脚本(mid请尽可能规范)</button>
         <a href="http://zhipu.lezhi99.com/Zhipu-index.html" target="_blank">前往番茄简谱</a>
     </div>
     <textarea id="out" class="basicTheme basicTheme-focus"
@@ -125,7 +126,7 @@
                     }
                 }
 
-                pu += indexToje(track[i].midi - 60);
+                pu += JE.indexToje(track[i].midi - 60);
                 if (temp) {
                     pu += '>';
                     together = false;
