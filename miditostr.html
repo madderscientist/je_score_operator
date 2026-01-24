@@ -83,6 +83,9 @@
         placeholder="输出"></textarea>
     <div class="center-div">
         <button class="basicTheme" onclick="fq2je();">番茄简谱转换为数字谱</button>
+        <button class="basicTheme" onclick="fq2midi();">番茄简谱转换为MIDI</button>
+        <div class="check-div"><input id='fqStrict' type="checkbox">严格对齐小节</div>
+        <div class="check-div"><input id='fqSingleNoteAccidentals' type="checkbox" checked>临时升降号仅作用于单音</div>
     </div>
 </body>
 <script>
@@ -166,8 +169,15 @@
     // 番茄简谱脚本转为数字谱
     function fq2je() {
         let fqstr = document.getElementById('out').value;
-        let fqobj = new FQ(fqstr);
+        let fqobj = new FQ(fqstr, fqStrict.checked, fqSingleNoteAccidentals.checked);
         document.getElementById('out').value = fqobj.toJE();
+    }
+    // 番茄简谱脚本转换为midi并下载
+    function fq2midi() {
+        let fqstr = document.getElementById('out').value;
+        let fqobj = new FQ(fqstr, fqStrict.checked, fqSingleNoteAccidentals.checked);
+        let mid = fqobj.toMidi();
+        download(mid.export());
     }
     /*====以下功能均未做接口====*/
     // 翻转midi

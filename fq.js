@@ -68,6 +68,7 @@ class FQ {
         currentTime;// 当前时间 (拍)
         baseMidi;   // { time: number, midi: number }[]
         timeSignatures; // FQSignature[]
+        bpmChanges; // { time: number, bpm: number }[]
         constructor(options = {}) {
             Object.assign(this, {
                 currentTime: 0,
@@ -76,6 +77,7 @@ class FQ {
                 singleNoteAccidentals: false,   // 临时升降号是否仅作用于单音（true=不记忆小节状态，false=记忆小节状态）
                 barAccidentals: {}, // 小节内升降号记忆 e.g.{ '1': 1, '4': -1 }
                 timeSignatures: [], // 记录拍号变更，格式 { time: number, topNum: number, bottomNum: number }
+                bpmChanges: [],     // 记录bpm变更，格式 { time: number, bpm: number}
             }, options);
         }
         addSignature(time, topNum, bottomNum) {
@@ -126,17 +128,38 @@ class FQ {
             const dt = this.currentTime - t;
             return t + Math.floor(dt / beatsPerBar) * beatsPerBar;
         }
+        addBPMChange(time, bpm) {
+            const existing = this.bpmChanges.find(bm => Math.abs(bm.time - time) < 1e-6);
+            if (existing) {
+                existing.bpm = bpm;
+                return existing;
+            }
+            const bc = { time, bpm };
+            this.bpmChanges.push(bc);
+            this.bpmChanges.sort((a, b) => a.time - b.time);
+            return bc;
+        }
     };
 
-    constructor(script) {
-        const parsed = FQ.parse(script);
-        this.meta = parsed.meta;
+    /**
+     * 解析番茄简谱脚本
+     * @param {string} script 简谱脚本内容
+     * @param {boolean} strictMeasure 是否严格对齐小节
+     * @param {boolean} singleNoteAccidentals 临时升降号是否仅作用于单音
+     */
+    constructor(script, strictMeasure = false, singleNoteAccidentals = false) {
+        const parsed = FQ.parse(script, strictMeasure, singleNoteAccidentals);
+        this.title = parsed.title;
         this.tracks = parsed.tracks;
+        this.timeSignatures = parsed.timeSignatures;
+        this.bpmChanges = parsed.bpmChanges;
     }
 
     /**
      * 主解析入口
      * @param {string} content 文件内容
+     * @param {boolean} strictMeasure 是否严格对齐小节
+     * @param {boolean} singleNoteAccidentals 临时升降号是否仅作用于单音
      */
     static parse(content, strictMeasure = false, singleNoteAccidentals = false) {
         const lines = content.split(/\r?\n/);
@@ -144,6 +167,7 @@ class FQ {
             title: '',
             author: '',
             key: 'C',
+            bpm: 120,
             timeSignature: '4/4',
             baseMidi: 60 // 默认 1=C (Middle C)
         };
@@ -162,19 +186,20 @@ class FQ {
             Z: 作者
             D: 调性 一个大写字母
             P: 2/4
-            J: 欢快的
+            J: 速度
             */
             if (line.match(/^[VBZDP]:/)) {
                 const type = line.charAt(0);
                 const val = line.substring(2).trim();
                 switch (type) {
-                    case 'B': meta.title = val; break;
-                    case 'Z': meta.author = val; break;
+                    case 'B': meta.title += val; break;
+                    case 'Z': meta.author += val; break;
                     case 'D':
                         meta.key = FQ.parseKeySignature(val);
                         meta.baseMidi = 60 + (FQ.keyOffsets[meta.key] || 0);
                         break;
                     case 'P': meta.timeSignature = val; break;
+                    case 'J': meta.bpm = parseFloat(val); break;
                 } return;
             }
 
@@ -204,6 +229,7 @@ class FQ {
         const context = new FQ.FQContext({
             baseMidi: [{ time: 0, midi: meta.baseMidi }],
             timeSignatures: [new FQ.FQSignature(0, parseInt(signature[0]), parseInt(signature[1]))],
+            bpmChanges: [{ time: 0, bpm: meta.bpm || 120 }],
             strictMeasure: strictMeasure,
             singleNoteAccidentals: singleNoteAccidentals
         });
@@ -219,8 +245,12 @@ class FQ {
                 )
             );
         });
-
-        return { meta, tracks };
+        return {
+            title: meta.title,
+            tracks: tracks,
+            timeSignatures: context.timeSignatures,
+            bpmChanges: context.bpmChanges,
+        };
     }
 
     /**
@@ -378,7 +408,8 @@ class FQ {
                 }
                 const content = source.substring(i + 1, endQuote);
                 if (content.startsWith('bpm:')) {
-                    // 速度变化，暂时忽略
+                    const bpm = parseFloat(content.substring(4));
+                    context.addBPMChange(context.currentTime, bpm);
                 } i = endQuote + 1; continue;
             }
 
@@ -600,6 +631,54 @@ class FQ {
         return result;
     }
 
+    /**
+     * 转换为midi对象
+     * @returns {midi} midi对象
+     */
+    toMidi() {
+        let bpm0 = 120;
+        let bpm_left = [...this.bpmChanges];
+        if (this.bpmChanges.length > 0 && this.bpmChanges[0].time < 1e-6) {
+            bpm0 = this.bpmChanges[0].bpm;
+            bpm_left.shift();
+        }
+        let time_signature0 = [4, 4];
+        let time_signature_left = [...this.timeSignatures];
+        if (this.timeSignatures.length > 0 && this.timeSignatures[0].time < 1e-6) {
+            time_signature0 = [this.timeSignatures[0].topNum, this.timeSignatures[0].bottomNum];
+            time_signature_left.shift();
+        }
+        const mid = new midi(bpm0, time_signature0, 480, [], this.title);
+        for (const track of this.tracks) {
+            const mt = mid.addTrack(new mtrk(track.name));
+            for (const note of track.notes) {
+                mt.addEvent(midiEvent.note(
+                    note.time * mid.tick,
+                    note.duration * mid.tick,
+                    note.pitch, 100
+                ));
+            }
+        }
+        // 其余控制信息加在第一个轨道中
+        if (mid.Mtrk.length > 1) {
+            const mt0 = mid.Mtrk[0];
+            for (const ts of time_signature_left) {
+                mt0.addEvent(midiEvent.time_signature(
+                    ts.time * mid.tick,
+                    ts.topNum,
+                    ts.bottomNum
+                ));
+            }
+            for (const bpm of bpm_left) {
+                mt0.addEvent(midiEvent.tempo(
+                    bpm.time * mid.tick,
+                    bpm.bpm
+                ));
+            }
+        }
+        return mid;
+    }
+
     ///<reference path="midi.js" />
     /**
      * midi对象转换为番茄简谱脚本
@@ -788,6 +867,10 @@ class FQ {
             .map(x => atrack(x).split('|'));
         //脚本头
         let o = `B: ${j.header.name}\nZ: 佚名词曲\nD: C\n`;
+        const bpm0 = j.header.tempos[0];
+        if (bpm0 && bpm0.ticks <= 1) o += `J: ${bpm0.bpm}\n`;
+        const ts0 = j.header.timeSignatures[0];
+        if (ts0 && ts0.ticks <= 1) o += `P: ${ts0.timeSignature[0]}/${ts0.timeSignature[1]}\n`;
         //拼接
         let linecount = 0;
         for (let i = 0; i < results[0].length; i += barNum) {   // 小节计数

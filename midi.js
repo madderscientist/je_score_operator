@@ -163,17 +163,30 @@ class mtrk {
         return t;
     }
     /**
-     * 将字符串转换为ascii数组
+     * 将字符串转换为UTF-8数组
      * @param {string} name string
      * @param {number} x array's length (default:self-adaption)
-     * @returns array
+     * @returns {Array}
      * @example mtrk.string_hex("example",3) // [101,120,97]
      */
-    static string_hex(str, x = -1) {
-        const Buffer = Array(x > 0 ? x : str.length).fill(0);
-        const len = Math.min(Buffer.length, str.length);
-        for (let i = 0; i < len; i++) Buffer[i] = str[i].charCodeAt();
-        return Buffer;
+    static string_hex(str, maxBytes = -1) {
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        if (maxBytes > 0) {
+            const result = new Array(maxBytes).fill(0);
+            const len = Math.min(maxBytes, bytes.length);
+            for (let i = 0; i < len; i++) result[i] = bytes[i];
+            return result;
+        } return Array.from(bytes);
+    }
+    /**
+     * 将UTF-8数组转换为字符串
+     * @param {Array} bytes byte array
+     * @returns {string}
+     */
+    static hex_string(bytes) {
+        const decoder = new TextDecoder();
+        return decoder.decode(new Uint8Array(bytes));
     }
     /**
      * 将一个正整数按16进制拆分成各个位放在数组中, 最低位在数组最高位
@@ -393,8 +406,9 @@ class midi {
     }
     /**
      * 添加音轨，如果无参则创建并返回
-     * @param {mtrk} newtrack
-     * @returns mtrk
+     * @param {mtrk} newtrack null则创建新音轨
+     * @param {number} channel_id 指定音轨位置，默认-1表示添加到最后
+     * @returns {mtrk} 新添加的音轨
      * @example track = m.addTrack(); m2.addTrack(new mtrk("test"))
      */
     addTrack(newtrack = null, channel_id = -1) {
@@ -489,9 +503,7 @@ class midi {
                                         break;
                                     case 0x03:
                                         // 给当前mtrk块同序号的音轨改名
-                                        newmidi.Mtrk[n].name = '';
-                                        for (let q = 1; q <= midi_file[i]; q++)
-                                            newmidi.Mtrk[n].name += String.fromCharCode(midi_file[i + q]);
+                                        newmidi.Mtrk[n].name = mtrk.hex_string(midi_file.slice(i + 1, i + 1 + midi_file[i]));
                                         break;
                                     case 0x21:
                                         midiPort = midi_file[i + 1];
