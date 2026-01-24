@@ -81,6 +81,9 @@
     <textarea id="out" class="basicTheme basicTheme-focus"
         style="width: 80%;height: 400px;margin: 10px 10% 0 10%;"
         placeholder="输出"></textarea>
+    <div class="center-div">
+        <button class="basicTheme" onclick="fq2je();">番茄简谱转换为数字谱</button>
+    </div>
 </body>
 <script>
     registInputFile(document.getElementById('fin'));
@@ -159,6 +162,12 @@
     function fq(barNum = 4) {
         mi.align(4);
         document.getElementById('out').value = FQ.mid2fanqie(mi, barNum);
+    }
+    // 番茄简谱脚本转为数字谱
+    function fq2je() {
+        let fqstr = document.getElementById('out').value;
+        let fqobj = new FQ(fqstr);
+        document.getElementById('out').value = fqobj.toJE();
     }
     /*====以下功能均未做接口====*/
     // 翻转midi
