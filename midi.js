@@ -5,7 +5,7 @@
  * - 不记录通道信息（在导出为二进制时由mtrk加上通道信息）
  */
 class midiEvent {
-    ticks;  // 无需是整数 因为export时会被mtrk.tick_hex转为整数
+    ticks;  // 绝对时间 无需是整数 因为export时会被mtrk.tick_hex转为整数
     code;   // 必须是整数 由构造函数保证，但不限制范围
     value;  // 每一项必须是整数 由构造函数保证，但不限制范围
     // 范围的限制由static方法保证
@@ -149,7 +149,7 @@ class mtrk {
     /**
      * 将tick数转换为midi的时间格式
      * @param {number} ticknum float，但会转换为int
-     * @returns midi tick array
+     * @returns {number[]} midi tick array
      * @example mtrk.tick_hex(555555) // [0x08, 0x7A, 0x23]
      */
     static tick_hex(ticknum) {
@@ -166,7 +166,7 @@ class mtrk {
      * 将字符串转换为UTF-8数组
      * @param {string} name string
      * @param {number} x array's length (default:self-adaption)
-     * @returns {Array}
+     * @returns {number[]} byte array
      * @example mtrk.string_hex("example",3) // [101,120,97]
      */
     static string_hex(str, maxBytes = -1) {
@@ -192,7 +192,7 @@ class mtrk {
      * 将一个正整数按16进制拆分成各个位放在数组中, 最低位在数组最高位
      * @param {number} num float，但会转换为int
      * @param {number} x array's length (default:self-adaption)
-     * @returns array
+     * @returns {number[]}
      * @example mtrk.number_hex(257,5) // [0,0,0,1,1]
      */
     static number_hex(num, x = -1) {
@@ -276,7 +276,7 @@ class mtrk {
     /**
      * 将mtrk转换为track_id音轨上的midi数据
      * @param {number} track_id int, [0, 15]
-     * @returns Array
+     * @returns {number[]} midi binary data array
      */
     export(track_id) {
         this.sort();
@@ -309,7 +309,7 @@ class mtrk {
     /**
      * 将音轨转为可JSON对象
      * @param {number} track_id 音轨所属轨道id (从0开始)
-     * @returns json object
+     * @returns {Object} json
      */
     JSON(track_id) {
         this.sort();
@@ -602,8 +602,8 @@ class midi {
     }
     /**
      * 转换为midi数据
-     * @param {*} type midi file type [0 or 1(default)]
-     * @returns Uint8Array
+     * @param {number} type midi file type [0 or 1(default)]
+     * @returns {Uint8Array}
      */
     export(type = 1) {
         if (type == 0) {    // midi0创建 由于事件不记录音轨，需要归并排序输出
@@ -679,7 +679,7 @@ class midi {
 
     /**
      * 将midi转换为json对象。原理：每个音轨转换为json对象并对事件进行合并
-     * @returns json object
+     * @returns {Object} json
      */
     JSON() {
         let j = {
