@@ -53,6 +53,8 @@ graph LR
 基本原理：利用midi协议解读音符【[midi协议怎么看？](https://zhuanlan.zhihu.com/p/464166848)】。可以解读为没有时值的je谱，也可以解读为*番茄简谱*脚本：一个图片形式简谱制作网站，保留时值信息。<br>
 本项目重新造了midi轮子。使用方法：[midi class](./midi%20class.md)
 
+> 番茄简谱年久失修，推荐使用 [jpFun](https://madderscientist.github.io/jpFun/playground/) 直接制谱。midi 或 musicxml 直接拖入即可。
+
 ## [midi制作](https://madderscientist.github.io/je_score_operator/midi.html)
 利用特定文本生成midi文件的工具。<br>
 所谓特定文本，即需要的json，需要给出音序号、时长、开始时间（可省略）。详见网站。若不写明开始时间，则默认在上一个音的后面追加。
