@@ -184,7 +184,9 @@
     }
     function toMin() {
         const before = document.getElementById("before");
-        before.value = JE.simplified(before.value);
+        const { result, downSemitones, sharpCount } = JE.simplified(before.value);
+        before.value = result;
+        alert("降" + downSemitones + "调，最少" + sharpCount + "个“#”");
     }
     function byTon() {
         let x = document.getElementById("beforemode").value - document.getElementById("aftermode").value;
@@ -214,20 +216,21 @@
         printExtreme(); lessbrackets();
     }
     function toExtreme() {
-        let y = JE.findExtreme(document.getElementById("target").value)[document.getElementById("extremeMode").value];
-        if (y == 0.1) alert("请按je谱格式输入！");
+        const extremeMode = document.getElementById("extremeMode").value;
+        const y = JE.findExtreme(document.getElementById("target").value)[extremeMode];
+        const before = document.getElementById("before");
+        const x = JE.findExtreme(before.value)[extremeMode];
+        if (y === undefined || x === undefined) alert("请按je谱格式输入！");
         else {
-            const before = document.getElementById("before");
-            let x = JE.findExtreme(before.value)[document.getElementById("extremeMode").value];
             let autoup = document.getElementById('autoup').checked & semiMode.semiMode;
             before.value = JE.convert(before.value, y - x, Note_aft, autoup);
         }
     }
     function printExtreme() {
-        let x = JE.findExtreme(document.getElementById("before").value);
-        let h = JE.indexToje(x[0], Note_aft); if (!h) h = '?';
-        let l = JE.indexToje(x[1], Note_aft); if (!l) l = '?';
-        document.getElementById("situation").innerHTML = `最低音：${h}   最高音：${l}`;
+        const [lowest, highest] = JE.findExtreme(document.getElementById("before").value);
+        const lowestNote = lowest === undefined ? '?' : JE.indexToje(lowest, Note_aft);
+        const highestNote = highest === undefined ? '?' : JE.indexToje(highest, Note_aft);
+        document.getElementById("situation").innerHTML = `最低音：${lowestNote}   最高音：${highestNote}`;
     }
     function lessbrackets() {
         const dom = document.getElementById("before");

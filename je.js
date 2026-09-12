@@ -22,11 +22,10 @@ class JE {
             else {
                 if (bef[n] == '#') m = 1;
                 else if (bef[n] == 'b') m = -1;
-                let position = JE.note.indexOf(bef[n + Math.abs(m)]);      //在列表中的位置
-                let N = 0;            //结果的位置
-                let name = '';        //音名
-                let pitch = 0;        //音高
-                let brackets = '';    //括号
+                let position = JE.note.indexOf(bef[n + Math.abs(m)]);   // 在列表中的位置
+                let N = 0;            // 结果的位置
+                let name = '';        // 音名
+                let pitch = 0;        // 音高
                 if (position == -1) {
                     m = 0;
                     aft = aft + bef[n];
@@ -42,8 +41,10 @@ class JE {
                         } else name = Note_aft[N];
                         lastm = name.includes("#") ? 1 : 0;
                     } else name = Note_aft[N];
-                    for (let i = 1; i <= Math.abs(pitch); i++) brackets = brackets + '[';
-                    aft = aft + ((pitch > 0) ? brackets : brackets.replace(/\[/g, '(')) + name + ((pitch > 0) ? brackets.replace(/\[/g, ']') : brackets.replace(/\[/g, ')'));
+                    const amount = Math.abs(pitch);
+                    const opening = (pitch > 0 ? '[' : '(').repeat(amount);
+                    const closing = (pitch > 0 ? ']' : ')').repeat(amount);
+                    aft += opening + name + closing;
                 }
             }
             n = n + Math.abs(m) + 1;
@@ -58,43 +59,42 @@ class JE {
      * @returns {number} 次数
      */
     static countkey(content, key) {
-        return content.length - content.replace(new RegExp(key, "gm"), '').length;
+        return content.match(new RegExp(key, "gm"))?.length ?? 0;
     }
 
     /**
      * 一键最简（#最少）
      * @param {string} bef 
-     * @returns {string} 最简调号的谱
+     * @returns {{ result: string; downSemitones: number; sharpCount: number }}
      */
     static simplified(bef) {
-        let downtimes = 0;
-        let aft = '';
-        aft = JE.convert(bef, 0);
-        let amount = JE.countkey(aft, '#');
-        let min = amount;
+        let current = JE.convert(bef, 0);
+        let result = current;
+        let downSemitones = 0;
+        let sharpCount = JE.countkey(current, '#');
         for (let i = 1; i < 12; i++) {
-            aft = JE.convert(aft, -1);
-            amount = JE.countkey(aft, '#');
-            if (amount < min) {
-                min = amount;
-                downtimes = i;
-                if (min == 0) break;
+            current = JE.convert(current, -1);
+            const currentSharpCount = JE.countkey(current, '#');
+            if (currentSharpCount < sharpCount) {
+                result = current;
+                downSemitones = i;
+                sharpCount = currentSharpCount;
+                if (sharpCount == 0) break;
             }
         }
-        alert("降" + downtimes + "调，最少" + min + "个“#”");
-        return JE.convert(bef, -downtimes);
+        return { result, downSemitones, sharpCount };
     }
 
     /**
      * 找到极值音，返回序号（[最低，最高]）
      * @param {string} content 
-     * @returns {[number, number]} 最低音和最高音的编码
+     * @returns {[number|undefined, number|undefined]} 最低音和最高音的编码
      */
     static findExtreme(content) {
         let len = content.length;
         let octave = 0;
-        let lowest = 0.1;
-        let highest = 0.1;
+        let lowest = undefined;
+        let highest = undefined;
         let n = 0;
         while (n < len) {
             while (n < len) {   //检测括号，判断八度
@@ -113,8 +113,8 @@ class JE {
                     if (position < 0) n++;    //不在表格里
                     else {
                         position = position + up + octave;
-                        if (position < lowest || lowest == 0.1) lowest = position;
-                        if (position > highest || highest == 0.1) highest = position;
+                        if (position < lowest || lowest === undefined) lowest = position;
+                        if (position > highest || highest === undefined) highest = position;
                         n = N + 1;
                     }
                 }
@@ -132,12 +132,13 @@ class JE {
      */
     static indexToje(index, noteMap = JE.note) {
         if (index != (index | 0)) return '';
-        let position = (index % 12 + 12) % 12;
-        let k = Math.floor(index / 12);
-        let brackets = '';
-        for (let i = 0; i < Math.abs(k); i++) {
-            brackets = brackets + '[';
-        }
-        return ((k > 0) ? brackets : brackets.replace(/\[/g, '(')) + noteMap[position] + ((k > 0) ? brackets.replace(/\[/g, ']') : brackets.replace(/\[/g, ')'));
+
+        const position = (index % 12 + 12) % 12;
+        const octave = Math.floor(index / 12);
+        const amount = Math.abs(octave);
+        const opening = (octave > 0 ? '[' : '(').repeat(amount);
+        const closing = (octave > 0 ? ']' : ')').repeat(amount);
+
+        return opening + noteMap[position] + closing;
     }
 }
